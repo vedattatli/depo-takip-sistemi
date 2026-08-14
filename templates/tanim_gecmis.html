@@ -1,0 +1,44 @@
+{% extends "taban.html" %}
+{% block baslik %}İşlem Geçmişi{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>İşlem Geçmişi</h1>
+    <div class="alt">{{ toplam }} kayıt · sistemde kim ne yaptı</div>
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-govde sikisik">
+    {% if satirlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead><tr><th style="width:150px">Zaman</th><th style="width:160px">Kullanıcı</th>
+                   <th style="width:170px">İşlem</th><th>Detay</th></tr></thead>
+        <tbody>
+        {% for s in satirlar %}
+          <tr>
+            <td class="kucuk">{{ s.zaman | kisa_tarih }}</td>
+            <td>{{ s.kullanici_adi }}</td>
+            <td class="kucuk"><span class="rozet gri">{{ s.islem }}</span></td>
+            <td class="kucuk">{{ s.detay or '-' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if sayfa_sayisi > 1 %}
+    <div class="sayfalama">
+      {% if sayfa > 1 %}<a class="dugme mini" href="{{ url_for('tanimlar.gecmis', sayfa=sayfa-1) }}">← Önceki</a>{% endif %}
+      <span class="bilgi">Sayfa {{ sayfa }} / {{ sayfa_sayisi }}</span>
+      {% if sayfa < sayfa_sayisi %}<a class="dugme mini" href="{{ url_for('tanimlar.gecmis', sayfa=sayfa+1) }}">Sonraki →</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">↺</span>Kayıt yok.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

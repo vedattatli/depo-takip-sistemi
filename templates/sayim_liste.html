@@ -1,0 +1,89 @@
+{% extends "taban.html" %}
+{% block baslik %}Sayım{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Fiziksel Sayım</h1>
+    <div class="alt">Sayım körlemesine yapılır: sayan kişi sistemdeki rakamı görmez, fark ancak kapanışta ortaya çıkar.</div>
+  </div>
+</div>
+
+{% if rol_yeterli(kullanici.rol, 'depo') %}
+<div class="kart">
+  <div class="kart-basi"><h2>Yeni Sayım Başlat</h2></div>
+  <div class="kart-govde">
+    <form method="post" action="{{ url_for('sayim.yeni') }}">
+      <div class="izgara k4">
+        <div class="form-satir">
+          <label for="depo_id">Depo *</label>
+          <select id="depo_id" name="depo_id" required>
+            {% for d in depolar %}<option value="{{ d.id }}">{{ d.ad }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="kategori_id">Kategori (kısmi sayım)</label>
+          <select id="kategori_id" name="kategori_id">
+            <option value="">Tüm kategoriler</option>
+            {% for k in kategoriler %}<option value="{{ k.id }}">{{ k.ad }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="kapsam">Kapsam</label>
+          <select id="kapsam" name="kapsam">
+            <option value="hepsi">Tüm kalemler</option>
+            <option value="stokta">Sadece stoğu olanlar</option>
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="notlar">Not</label>
+          <input type="text" id="notlar" name="notlar" placeholder="örn. yıl sonu sayımı">
+        </div>
+      </div>
+      <button type="submit" class="dugme ana">Sayımı başlat</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="kart">
+  <div class="kart-basi"><h2>Sayım Geçmişi</h2></div>
+  <div class="kart-govde sikisik">
+    {% if sayimlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>No</th><th>Tarih</th><th>Depo</th><th>Durum</th>
+              <th class="orta">İlerleme</th><th>Başlatan</th><th>Not</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for s in sayimlar %}
+          {% set yuzde = (s.sayilan_sayisi / s.satir_sayisi * 100) if s.satir_sayisi else 0 %}
+          <tr>
+            <td class="kucuk">#{{ s.id }}</td>
+            <td class="kucuk">{{ s.tarih | kisa_tarih }}</td>
+            <td>{{ s.depo_ad }}</td>
+            <td>
+              <span class="rozet {{ {'acik':'turuncu','tamamlandi':'yesil','iptal':'gri'}[s.durum] }}">
+                {{ {'acik':'Devam ediyor','tamamlandi':'Tamamlandı','iptal':'İptal'}[s.durum] }}
+              </span>
+            </td>
+            <td>
+              <div class="olcer {{ 'dolu' if yuzde >= 100 else 'az' }}"><span style="width:{{ yuzde }}%"></span></div>
+              <div class="kucuk">{{ s.sayilan_sayisi }} / {{ s.satir_sayisi }} kalem</div>
+            </td>
+            <td class="kucuk">{{ s.kullanici_ad or '-' }}</td>
+            <td class="kucuk">{{ s.notlar or '-' }}</td>
+            <td><a class="dugme mini" href="{{ url_for('sayim.detay', sayim_id=s.id) }}">
+              {{ 'Devam et' if s.durum == 'acik' else 'Görüntüle' }}</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">☑</span>Henüz sayım yapılmamış.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

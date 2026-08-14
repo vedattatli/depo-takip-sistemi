@@ -1,0 +1,141 @@
+{% extends "taban.html" %}
+{% block baslik %}Stok Listesi{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Stok Listesi</h1>
+    <div class="alt">
+      {{ satirlar | length }} kalem listeleniyor · toplam değer <strong>{{ toplam_deger | para }}</strong>
+    </div>
+  </div>
+  <div class="eylemler">
+    <a class="dugme" href="{{ url_for('raporlar.disari_stok', depo=secili_depo or None,
+        kategori=secili_kategori or None, q=arama or None, kritik='1' if kritik else None,
+        stokta='1' if stokta else None) }}">⤓ Excel'e aktar</a>
+    {% if rol_yeterli(kullanici.rol, 'depo') %}
+      <a class="dugme ana" href="{{ url_for('urunler.yeni') }}">+ Yeni ürün</a>
+    {% endif %}
+  </div>
+</div>
+
+<form class="filtre-cubugu" method="get">
+  <div class="form-satir genis">
+    <label>Ara</label>
+    <input type="search" name="q" value="{{ arama }}" placeholder="ürün adı, kod, renk, ölçü…" autofocus>
+  </div>
+  <div class="form-satir">
+    <label>Depo</label>
+    <select name="depo" data-otomatik-gonder>
+      <option value="">Tüm depolar</option>
+      {% for d in depolar %}<option value="{{ d.id }}" {{ 'selected' if secili_depo == d.id }}>{{ d.ad }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="form-satir">
+    <label>Kategori</label>
+    <select name="kategori" data-otomatik-gonder>
+      <option value="">Hepsi</option>
+      {% for k in kategoriler %}<option value="{{ k.id }}" {{ 'selected' if secili_kategori == k.id }}>{{ k.ad }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="form-satir">
+    <label>Tedarikçi</label>
+    <select name="tedarikci" data-otomatik-gonder>
+      <option value="">Hepsi</option>
+      {% for t in tedarikciler %}<option value="{{ t.id }}" {{ 'selected' if secili_tedarikci == t.id }}>{{ t.ad }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="form-satir">
+    <label>Sırala</label>
+    <select name="sirala" data-otomatik-gonder>
+      <option value="urun" {{ 'selected' if siralama == 'urun' }}>Ürün adı</option>
+      <option value="kategori" {{ 'selected' if siralama == 'kategori' }}>Kategori</option>
+      <option value="stok_az" {{ 'selected' if siralama == 'stok_az' }}>Stoğu az olan</option>
+      <option value="stok_cok" {{ 'selected' if siralama == 'stok_cok' }}>Stoğu çok olan</option>
+      <option value="deger" {{ 'selected' if siralama == 'deger' }}>Değeri yüksek</option>
+    </select>
+  </div>
+  <label class="onay"><input type="checkbox" name="kritik" value="1" {{ 'checked' if kritik }} data-otomatik-gonder> Sadece kritik</label>
+  <label class="onay"><input type="checkbox" name="stokta" value="1" {{ 'checked' if stokta }} data-otomatik-gonder> Stokta olanlar</label>
+  <button type="submit" class="dugme ana">Filtrele</button>
+  <a href="{{ url_for('stok.liste') }}" class="dugme">Temizle</a>
+</form>
+
+<div class="kart">
+  <div class="kart-govde sikisik">
+    {% if satirlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr>
+            <th>Ürün / Varyant</th>
+            <th>Stok Kodu</th>
+            <th>Kategori</th>
+            <th class="sayi">Fiziksel</th>
+            <th class="sayi">Rezerve</th>
+            <th class="sayi">Kullanılabilir</th>
+            <th class="sayi">Min.</th>
+            <th class="sayi">Değer</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for s in satirlar %}
+          {% set kritik_mi = s.kullanilabilir <= s.min_stok %}
+          <tr>
+            <td>
+              <a href="{{ url_for('stok.detay', varyant_id=s.varyant_id) }}"><strong>{{ s.urun_ad }}</strong></a>
+              {% if s.renk_dekor or s.olcu %}
+                <div class="kucuk">{{ s.renk_dekor or '' }}{% if s.renk_dekor and s.olcu %} · {% endif %}{{ s.olcu or '' }}</div>
+              {% endif %}
+            </td>
+            <td class="kucuk">{{ s.sku }}</td>
+            <td class="kucuk">{{ s.kategori_ad or '-' }}</td>
+            <td class="sayi">{{ s.stok | sayi }} <span class="kucuk">{{ s.ana_birim }}</span></td>
+            <td class="sayi">
+              {% if s.rezerve %}<span style="color:var(--turuncu)">{{ s.rezerve | sayi }}</span>{% else %}<span class="kucuk">-</span>{% endif %}
+            </td>
+            <td class="sayi">
+              <strong style="color:{{ 'var(--kirmizi)' if s.kullanilabilir <= 0 else ('var(--turuncu)' if kritik_mi else 'inherit') }}">
+                {{ s.kullanilabilir | sayi }}
+              </strong>
+            </td>
+            <td class="sayi kucuk">{{ s.min_stok | sayi }}</td>
+            <td class="sayi kucuk">{{ s.stok_degeri | para }}</td>
+            <td class="orta">
+              {% if s.kullanilabilir <= 0 %}<span class="rozet kirmizi">tükendi</span>
+              {% elif kritik_mi %}<span class="rozet turuncu">kritik</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum">
+        {% if sistem_bos %}
+          <span class="buyuk">▤</span>
+          <div style="font-size:15px;color:var(--metin);font-weight:600;margin-bottom:4px">
+            Sistemde henüz ürün yok
+          </div>
+          Mevcut ürün listeniz Excel'deyse tek tek girmeyin — toplu aktarımla
+          bir seferde alın.
+          {% if rol_yeterli(kullanici.rol, 'depo') %}
+            <div style="margin-top:12px;display:flex;gap:8px;justify-content:center">
+              <a href="{{ url_for('aktarim.urun') }}" class="dugme ana">⇪ Toplu ürün aktar</a>
+              <a href="{{ url_for('urunler.yeni') }}" class="dugme">Tek ürün ekle</a>
+            </div>
+          {% endif %}
+        {% else %}
+          <span class="buyuk">▤</span>
+          Bu filtreyle eşleşen ürün yok.
+          {% if rol_yeterli(kullanici.rol, 'depo') %}
+            <div style="margin-top:10px"><a href="{{ url_for('urunler.yeni') }}" class="dugme ana">+ Yeni ürün ekle</a></div>
+          {% endif %}
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

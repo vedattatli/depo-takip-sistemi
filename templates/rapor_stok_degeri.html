@@ -1,0 +1,70 @@
+{% extends "taban.html" %}
+{% block baslik %}Stok Değeri{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Stok Değeri</h1>
+    <div class="alt">Depoda duran malın parasal karşılığı — son alış fiyatları üzerinden</div>
+  </div>
+  <form class="eylemler" method="get">
+    <select name="depo" data-otomatik-gonder>
+      <option value="">Tüm depolar</option>
+      {% for d in depolar %}<option value="{{ d.id }}" {{ 'selected' if secili_depo == d.id }}>{{ d.ad }}</option>{% endfor %}
+    </select>
+    <button type="button" class="dugme" onclick="window.print()">Yazdır</button>
+  </form>
+</div>
+
+<div class="sayac" style="margin-bottom:16px">
+  <div class="etiket">Toplam Stok Değeri</div>
+  <div class="deger" style="font-size:30px">{{ toplam | para }}</div>
+</div>
+
+<div class="izgara k2">
+  <div class="kart">
+    <div class="kart-basi"><h2>Kategori Dağılımı</h2></div>
+    <div class="kart-govde sikisik">
+      <table class="liste">
+        <thead><tr><th>Kategori</th><th class="orta">Kalem</th><th class="sayi">Tutar</th><th style="width:100px">Pay</th></tr></thead>
+        <tbody>
+        {% for k in kategoriler %}
+          {% set pay = (k.tutar / toplam * 100) if toplam else 0 %}
+          <tr>
+            <td>{{ k.kategori }}</td>
+            <td class="orta kucuk">{{ k.kalem }}</td>
+            <td class="sayi">{{ k.tutar | para }}</td>
+            <td>
+              <div class="olcer"><span style="width:{{ pay }}%"></span></div>
+              <div class="kucuk">%{{ pay | sayi(1) }}</div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% if not kategoriler %}<div class="bos-durum">Stok değeri hesaplanacak kalem yok.</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi"><h2>En Değerli 25 Kalem</h2></div>
+    <div class="kart-govde sikisik">
+      <div class="tablo-sar">
+        <table class="liste">
+          <thead><tr><th>Ürün</th><th class="sayi">Miktar</th><th class="sayi">Tutar</th></tr></thead>
+          <tbody>
+          {% for e in en_degerli %}
+            <tr>
+              <td>{{ e.urun_ad }}{% if e.renk_dekor %}<div class="kucuk">{{ e.renk_dekor }}</div>{% endif %}</td>
+              <td class="sayi kucuk">{{ e.miktar | sayi }} {{ e.ana_birim }}</td>
+              <td class="sayi">{{ e.tutar | para }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if not en_degerli %}<div class="bos-durum">Kayıt yok.</div>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

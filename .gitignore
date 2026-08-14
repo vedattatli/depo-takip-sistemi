@@ -1,0 +1,9 @@
+.venv/
+veri/
+__pycache__/
+*.pyc
+.DS_Store
+# kişisel içerik — repoya girmez
+staj-defteri/
+.claude/
+gereksinimler.txt

@@ -1,0 +1,65 @@
+{% extends "taban.html" %}
+{% block baslik %}Depolar{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Depolar</h1>
+    <div class="alt">Stok her depoda ayrı ayrı takip edilir; aralarında transfer yapılabilir.</div>
+  </div>
+</div>
+
+<div class="izgara k2">
+  <div class="kart">
+    <div class="kart-basi"><h2>{{ 'Depoyu Düzenle' if duzenle else 'Yeni Depo' }}</h2></div>
+    <div class="kart-govde">
+      <form method="post">
+        {% if duzenle %}<input type="hidden" name="id" value="{{ duzenle.id }}">{% endif %}
+        <div class="form-satir">
+          <label for="ad">Depo adı *</label>
+          <input type="text" id="ad" name="ad" required value="{{ duzenle.ad if duzenle else '' }}"
+                 placeholder="örn. Ana Depo, Atölye, Şantiye">
+        </div>
+        <div class="form-satir">
+          <label for="adres">Adres</label>
+          <input type="text" id="adres" name="adres" value="{{ duzenle.adres or '' if duzenle }}">
+        </div>
+        <div class="form-satir">
+          <label for="aciklama">Açıklama</label>
+          <input type="text" id="aciklama" name="aciklama" value="{{ duzenle.aciklama or '' if duzenle }}">
+        </div>
+        <label class="onay" style="margin-bottom:14px">
+          <input type="checkbox" name="aktif" value="1" {{ 'checked' if not duzenle or duzenle.aktif }}> Aktif
+        </label>
+        <div>
+          <button type="submit" class="dugme ana">Kaydet</button>
+          {% if duzenle %}<a class="dugme" href="{{ url_for('tanimlar.depolar') }}">Vazgeç</a>{% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi"><h2>Tanımlı Depolar</h2></div>
+    <div class="kart-govde sikisik">
+      <table class="liste">
+        <thead><tr><th>Depo</th><th class="orta">Hareket</th><th class="sayi">Stok Değeri</th><th></th></tr></thead>
+        <tbody>
+        {% for s in satirlar %}
+          <tr style="{{ 'opacity:.55' if not s.aktif }}">
+            <td>
+              <strong>{{ s.ad }}</strong>
+              {% if not s.aktif %}<span class="rozet gri">pasif</span>{% endif %}
+              {% if s.aciklama %}<div class="kucuk">{{ s.aciklama }}</div>{% endif %}
+            </td>
+            <td class="orta kucuk">{{ s.hareket }}</td>
+            <td class="sayi kucuk">{{ s.deger | para }}</td>
+            <td><a class="dugme mini" href="{{ url_for('tanimlar.depolar', duzenle=s.id) }}">Düzenle</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

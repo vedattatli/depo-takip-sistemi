@@ -1,0 +1,92 @@
+{% extends "taban.html" %}
+{% block baslik %}Tedarikçiler{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Tedarikçiler</h1>
+    <div class="alt">Teslim süresi bilgisi sipariş önerisi raporunda kullanılır — doğru girmek önemli.</div>
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-basi"><h2>{{ 'Tedarikçiyi Düzenle' if duzenle else 'Yeni Tedarikçi' }}</h2></div>
+  <div class="kart-govde">
+    <form method="post">
+      {% if duzenle %}<input type="hidden" name="id" value="{{ duzenle.id }}">{% endif %}
+      <div class="izgara k3">
+        <div class="form-satir">
+          <label for="ad">Firma adı *</label>
+          <input type="text" id="ad" name="ad" required value="{{ duzenle.ad if duzenle else '' }}">
+        </div>
+        <div class="form-satir">
+          <label for="yetkili">Yetkili kişi</label>
+          <input type="text" id="yetkili" name="yetkili" value="{{ duzenle.yetkili or '' if duzenle }}">
+        </div>
+        <div class="form-satir">
+          <label for="telefon">Telefon</label>
+          <input type="text" id="telefon" name="telefon" value="{{ duzenle.telefon or '' if duzenle }}">
+        </div>
+        <div class="form-satir">
+          <label for="eposta">E-posta</label>
+          <input type="text" id="eposta" name="eposta" value="{{ duzenle.eposta or '' if duzenle }}">
+        </div>
+        <div class="form-satir">
+          <label for="teslim_gun">Ortalama teslim süresi (gün) *</label>
+          <input type="number" id="teslim_gun" name="teslim_gun" min="0"
+                 value="{{ duzenle.teslim_gun if duzenle else 7 }}">
+          <div class="yardim">Sipariş verdikten kaç gün sonra mal geliyor?</div>
+        </div>
+        <div class="form-satir">
+          <label for="adres">Adres</label>
+          <input type="text" id="adres" name="adres" value="{{ duzenle.adres or '' if duzenle }}">
+        </div>
+      </div>
+      <div class="form-satir">
+        <label for="notlar">Notlar</label>
+        <input type="text" id="notlar" name="notlar" value="{{ duzenle.notlar or '' if duzenle }}">
+      </div>
+      <label class="onay" style="margin-bottom:14px">
+        <input type="checkbox" name="aktif" value="1" {{ 'checked' if not duzenle or duzenle.aktif }}> Aktif
+      </label>
+      <div>
+        <button type="submit" class="dugme ana">Kaydet</button>
+        {% if duzenle %}<a class="dugme" href="{{ url_for('tanimlar.tedarikciler') }}">Vazgeç</a>{% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-basi"><h2>Tanımlı Tedarikçiler</h2></div>
+  <div class="kart-govde sikisik">
+    {% if satirlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Firma</th><th>Yetkili</th><th>Telefon</th><th class="orta">Teslim</th>
+              <th class="orta">Ürün</th><th>Not</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for s in satirlar %}
+          <tr style="{{ 'opacity:.55' if not s.aktif }}">
+            <td>
+              <strong>{{ s.ad }}</strong>
+              {% if not s.aktif %}<span class="rozet gri">pasif</span>{% endif %}
+              {% if s.eposta %}<div class="kucuk">{{ s.eposta }}</div>{% endif %}
+            </td>
+            <td class="kucuk">{{ s.yetkili or '-' }}</td>
+            <td class="kucuk">{{ s.telefon or '-' }}</td>
+            <td class="orta kucuk">{{ s.teslim_gun }} gün</td>
+            <td class="orta kucuk">{{ s.urun_sayisi }}</td>
+            <td class="kucuk">{{ s.notlar or '-' }}</td>
+            <td><a class="dugme mini" href="{{ url_for('tanimlar.tedarikciler', duzenle=s.id) }}">Düzenle</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="bos-durum"><span class="buyuk">◎</span>Henüz tedarikçi eklenmemiş.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "taban.html" %}
+{% block baslik %}Fire Analizi{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Fire Analizi</h1>
+    <div class="alt">Kesim artığı, kırık ve kayıpların hangi üründe ne kadar tuttuğu</div>
+  </div>
+  <form class="eylemler" method="get">
+    <input type="date" name="bas" value="{{ bas }}">
+    <input type="date" name="bit" value="{{ bit }}">
+    <button type="submit" class="dugme ana">Getir</button>
+    <button type="button" class="dugme" onclick="window.print()">Yazdır</button>
+  </form>
+</div>
+
+<div class="izgara k2" style="margin-bottom:16px">
+  <div class="sayac {{ 'uyari' if genel_oran > 8 }}">
+    <div class="etiket">Genel Fire Oranı</div>
+    <div class="deger">%{{ genel_oran | sayi(1) }}</div>
+    <div class="not">toplam tüketimin fireye giden kısmı</div>
+  </div>
+  <div class="sayac">
+    <div class="etiket">Fire Tutarı</div>
+    <div class="deger" style="color:var(--kirmizi)">{{ toplam_fire_tutar | para }}</div>
+    <div class="not">{{ bas | kisa_tarih }} – {{ bit | kisa_tarih }}</div>
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-basi"><h2>Ürün Bazında Fire</h2></div>
+  <div class="kart-govde sikisik">
+    {% if satirlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Ürün</th><th>Kategori</th><th class="sayi">Fire</th>
+              <th class="sayi">Toplam Tüketim</th><th style="width:110px">Fire Oranı</th>
+              <th class="sayi">Tutar</th></tr>
+        </thead>
+        <tbody>
+        {% for s in satirlar %}
+          {% set oran = (s.fire / s.tuketim * 100) if s.tuketim else 0 %}
+          <tr>
+            <td>
+              <a href="{{ url_for('stok.detay', varyant_id=s.varyant_id) }}">{{ s.urun_ad }}</a>
+              {% if s.renk_dekor %}<div class="kucuk">{{ s.renk_dekor }}</div>{% endif %}
+            </td>
+            <td class="kucuk">{{ s.kategori_ad or '-' }}</td>
+            <td class="sayi"><strong>{{ s.fire | sayi }}</strong> <span class="kucuk">{{ s.ana_birim }}</span></td>
+            <td class="sayi kucuk">{{ s.tuketim | sayi }}</td>
+            <td>
+              <div class="olcer {{ 'bitti' if oran > 15 else ('az' if oran > 7 else 'dolu') }}">
+                <span style="width:{{ [oran, 100] | min }}%"></span>
+              </div>
+              <div class="kucuk">%{{ oran | sayi(1) }}</div>
+            </td>
+            <td class="sayi">{{ (s.fire * (s.birim_fiyat or 0)) | para }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">✓</span>Bu dönemde fire kaydı yok.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

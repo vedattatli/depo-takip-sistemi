@@ -1,0 +1,89 @@
+{% extends "taban.html" %}
+{% block baslik %}Depo Transferi{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Depo Transferi</h1>
+    <div class="alt">Bir depodan diğerine mal aktarımı. İki ayrı hareket kaydı oluşur, toplam stok değişmez.</div>
+  </div>
+</div>
+
+<form method="post">
+  <div class="kart">
+    <div class="kart-basi"><h2>Transfer Bilgileri</h2></div>
+    <div class="kart-govde">
+      <div class="izgara k3">
+        <div class="form-satir">
+          <label for="kaynak_depo">Çıkış deposu *</label>
+          <select id="kaynak_depo" name="kaynak_depo" data-depo-kaynak required>
+            {% for d in depolar %}<option value="{{ d.id }}">{{ d.ad }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="hedef_depo">Varış deposu *</label>
+          <select id="hedef_depo" name="hedef_depo" required>
+            {% for d in depolar %}
+              <option value="{{ d.id }}" {{ 'selected' if loop.index == 2 }}>{{ d.ad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="tarih">Tarih *</label>
+          <input type="date" id="tarih" name="tarih" value="{{ bugun }}" required>
+        </div>
+      </div>
+      <div class="form-satir" style="margin-bottom:0">
+        <label for="aciklama">Açıklama</label>
+        <input type="text" id="aciklama" name="aciklama" placeholder="opsiyonel">
+      </div>
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi">
+      <h2>Taşınacak Ürünler</h2>
+      <button type="button" class="dugme mini" data-satir-ekle>+ Satır ekle</button>
+    </div>
+    <div class="kart-govde">
+      <div class="okut-kutusu">
+        <label for="barkod-okut">🔍 Barkod okut</label>
+        <input type="text" id="barkod-okut" autocomplete="off"
+               placeholder="El terminaliyle okutun ya da kodu yazıp Enter'a basın">
+        <span id="barkod-durum" class="kucuk barkod-durum">Okutulan ürün listeye eklenir.</span>
+      </div>
+
+      <table class="satir-tablo" id="satirlar">
+        <thead>
+          <tr>
+            <th style="width:26px"></th>
+            <th>Ürün (yazarak arayın)</th>
+            <th style="width:140px">Miktar</th>
+            <th style="width:34px"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <template id="satir-kalibi">
+        <tr>
+          <td class="satir-no kucuk"></td>
+          <td class="urun-hucre">
+            <input type="hidden" name="varyant_id" class="varyant-id">
+            <input type="text" class="urun-arama" autocomplete="off" placeholder="ürün ara…">
+            <div class="oneri-kutu"></div>
+            <div class="secim-bilgi kucuk"></div>
+          </td>
+          <td><input type="text" name="miktar" class="miktar-alan" inputmode="decimal" placeholder="0"></td>
+          <td><button type="button" class="sil-dugme" title="Satırı sil">×</button></td>
+        </tr>
+      </template>
+    </div>
+  </div>
+
+  <div class="eylemler">
+    <button type="submit" class="dugme ana">Transferi kaydet</button>
+    <a class="dugme" href="{{ url_for('panel.anasayfa') }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

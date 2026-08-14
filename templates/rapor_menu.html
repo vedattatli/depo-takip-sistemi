@@ -1,0 +1,43 @@
+{% extends "taban.html" %}
+{% block baslik %}Raporlar{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Raporlar</h1>
+    <div class="alt">Deponun para, fire ve sipariş tarafı</div>
+  </div>
+</div>
+
+{% macro rapor_karti(uc, baslik, aciklama, simge) %}
+<a href="{{ url_for(uc) }}" class="kart" style="display:block;text-decoration:none;color:inherit">
+  <div class="kart-govde">
+    <div style="font-size:24px;margin-bottom:6px;opacity:.6">{{ simge }}</div>
+    <div style="font-weight:640;font-size:15px;margin-bottom:3px">{{ baslik }}</div>
+    <div style="color:var(--metin-soluk);font-size:13px">{{ aciklama }}</div>
+  </div>
+</a>
+{% endmacro %}
+
+<div class="izgara k3">
+  {{ rapor_karti('raporlar.siparis', 'Sipariş Önerisi',
+     'Tüketim hızı ve tedarik süresine göre şimdi sipariş edilmesi gerekenler.', '⚑') }}
+  {{ rapor_karti('raporlar.stok_degeri', 'Stok Değeri',
+     'Depoda ne kadar para duruyor — kategori ve kalem bazında.', '₺') }}
+  {{ rapor_karti('raporlar.fire', 'Fire Analizi',
+     'Kesim artığı ve zayiin hangi üründe ne kadar tuttuğu.', '✕') }}
+  {{ rapor_karti('raporlar.hareket_ozet', 'Hareket Özeti',
+     'Seçili dönemde işlem tipi ve kullanıcı bazında hareket dökümü.', '≡') }}
+  {% if rol_yeterli(kullanici.rol, 'depo') %}
+    {{ rapor_karti('raporlar.proje_maliyet', 'Proje Malzeme Maliyeti',
+       'Her işe giden malzemenin parasal karşılığı.', '◈') }}
+  {% endif %}
+  <a href="{{ url_for('raporlar.disari_stok') }}" class="kart" style="display:block;text-decoration:none;color:inherit">
+    <div class="kart-govde">
+      <div style="font-size:24px;margin-bottom:6px;opacity:.6">⤓</div>
+      <div style="font-weight:640;font-size:15px;margin-bottom:3px">Stok Listesini İndir</div>
+      <div style="color:var(--metin-soluk);font-size:13px">Tüm stoğu Excel'de açılacak CSV olarak indirir.</div>
+    </div>
+  </a>
+</div>
+{% endblock %}

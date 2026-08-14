@@ -1,0 +1,55 @@
+{% extends "taban.html" %}
+{% block baslik %}Proje Malzeme Maliyeti{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Proje Malzeme Maliyeti</h1>
+    <div class="alt">Her işe depodan giden malzemenin parasal karşılığı</div>
+  </div>
+  <div class="eylemler">
+    <button type="button" class="dugme" onclick="window.print()">Yazdır</button>
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-govde sikisik">
+    {% if satirlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Kod</th><th>Müşteri</th><th>Tip</th><th>Durum</th>
+              <th class="orta">Farklı Kalem</th><th class="sayi">Malzeme Tutarı</th><th>Teslim</th></tr>
+        </thead>
+        <tbody>
+        {% for s in satirlar %}
+          <tr>
+            <td><a href="{{ url_for('projeler.detay', proje_id=s.id) }}"><strong>{{ s.kod }}</strong></a></td>
+            <td>{{ s.musteri }}</td>
+            <td class="kucuk">{{ s.tip or '-' }}</td>
+            <td>
+              <span class="rozet {{ {'acik':'gri','uretimde':'mavi','tamamlandi':'yesil','iptal':'kirmizi'}[s.durum] }}">
+                {{ {'acik':'Açık','uretimde':'Üretimde','tamamlandi':'Tamamlandı','iptal':'İptal'}[s.durum] }}
+              </span>
+            </td>
+            <td class="orta kucuk">{{ s.kalem }}</td>
+            <td class="sayi"><strong>{{ s.tutar | para }}</strong></td>
+            <td class="kucuk">{{ s.teslim | kisa_tarih if s.teslim else '-' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">◈</span>Henüz proje kaydı yok.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-govde" style="font-size:13px;color:var(--metin-soluk)">
+    Tutarlar, hareket sırasında girilen fiyat yoksa ürünün güncel birim alış fiyatı üzerinden
+    hesaplanır. Bu rapor işçilik ve genel giderleri içermez, yalnızca depodan çıkan malzemeyi gösterir.
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ urun.ad }}{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>{{ urun.ad }} {% if not urun.aktif %}<span class="rozet gri">pasif</span>{% endif %}</h1>
+    <div class="alt">
+      {{ urun.kod }}
+      {% if urun.kategori_ad %} · {{ urun.kategori_ad }}{% endif %}
+      {% if urun.tedarikci_ad %} · {{ urun.tedarikci_ad }}{% endif %}
+    </div>
+  </div>
+  {% if rol_yeterli(kullanici.rol, 'depo') %}
+  <div class="eylemler">
+    <a class="dugme" href="{{ url_for('urunler.duzenle', urun_id=urun.id) }}">Ürünü düzenle</a>
+    <a class="dugme ana" href="{{ url_for('urunler.varyant_yeni', urun_id=urun.id) }}">+ Varyant ekle</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="izgara k2">
+  <div class="kart">
+    <div class="kart-basi"><h2>Ürün Bilgisi</h2></div>
+    <div class="kart-govde">
+      <dl class="bilgi-liste">
+        <dt>Stok birimi</dt><dd>{{ sabitler.BIRIM_ADLARI.get(urun.ana_birim, urun.ana_birim) }}</dd>
+        {% if urun.ikincil_birim %}
+        <dt>Çevrim</dt>
+        <dd>1 {{ urun.ana_birim }} = {{ urun.birim_katsayi | sayi }} {{ sabitler.BIRIM_ADLARI.get(urun.ikincil_birim, urun.ikincil_birim) }}</dd>
+        {% endif %}
+        <dt>Tedarik süresi</dt><dd>{{ urun.teslim_gun or '-' }} gün</dd>
+        {% if urun.aciklama %}<dt>Açıklama</dt><dd>{{ urun.aciklama }}</dd>{% endif %}
+      </dl>
+    </div>
+  </div>
+  <div class="kart">
+    <div class="kart-basi"><h2>Neden varyant?</h2></div>
+    <div class="kart-govde" style="color:var(--metin-soluk);font-size:13px">
+      Aynı ürün depoda farklı renk, dekor ve ölçülerde durur. Stok bu yüzden ürün
+      seviyesinde değil, <strong>varyant</strong> seviyesinde takip edilir.
+      &laquo;{{ urun.ad }}&raquo; adında 40 adet olması bir şey ifade etmez;
+      hangi renkten kaç adet olduğu iş yapan bilgidir.
+    </div>
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-basi">
+    <h2>Varyantlar ({{ varyantlar | length }})</h2>
+    {% if rol_yeterli(kullanici.rol, 'depo') %}
+      <a class="dugme mini" href="{{ url_for('urunler.varyant_yeni', urun_id=urun.id) }}">+ Ekle</a>
+    {% endif %}
+  </div>
+  <div class="kart-govde sikisik">
+    {% if varyantlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Stok Kodu</th><th>Renk / Dekor</th><th>Ölçü</th>
+              <th class="sayi">Stok</th><th class="sayi">Rezerve</th><th class="sayi">Min.</th>
+              <th class="sayi">Birim Fiyat</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for v in varyantlar %}
+          <tr style="{{ 'opacity:.55' if not v.aktif }}">
+            <td><a href="{{ url_for('stok.detay', varyant_id=v.id) }}"><strong>{{ v.sku }}</strong></a></td>
+            <td>{{ v.renk_dekor or '-' }}</td>
+            <td class="kucuk">{{ v.olcu or '-' }}</td>
+            <td class="sayi">{{ v.stok | sayi }} <span class="kucuk">{{ urun.ana_birim }}</span></td>
+            <td class="sayi kucuk">{{ v.rezerve | sayi }}</td>
+            <td class="sayi kucuk">{{ v.min_stok | sayi }}</td>
+            <td class="sayi kucuk">{{ v.birim_fiyat | para }}</td>
+            <td class="orta">
+              {% if rol_yeterli(kullanici.rol, 'depo') %}
+                <a class="dugme mini" href="{{ url_for('urunler.varyant_duzenle', varyant_id=v.id) }}">Düzenle</a>
+                <form method="post" style="display:inline"
+                      action="{{ url_for('urunler.varyant_durum', varyant_id=v.id) }}"
+                      data-onay="{{ 'Varyant pasife alınsın mı?' if v.aktif else 'Varyant tekrar aktifleştirilsin mi?' }}">
+                  <button class="dugme mini" type="submit">{{ 'Pasife al' if v.aktif else 'Aktifleştir' }}</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum">
+        <span class="buyuk">◇</span>
+        Bu ürünün varyantı yok. Stok tutabilmek için en az bir varyant eklemelisiniz.
+        {% if rol_yeterli(kullanici.rol, 'depo') %}
+        <div style="margin-top:10px">
+          <a class="dugme ana" href="{{ url_for('urunler.varyant_yeni', urun_id=urun.id) }}">+ Varyant ekle</a>
+        </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% macro menu_link(uc, etiket, simge, esles=None) -%}
+  {% set hedef = url_for(uc) %}
+  <a href="{{ hedef }}" class="{{ 'aktif' if (request.endpoint == uc or (esles and request.endpoint.startswith(esles))) else '' }}">
+    <span class="simge">{{ simge }}</span>{{ etiket }}
+  </a>
+{%- endmacro %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block baslik %}{{ UYGULAMA_ADI }}{% endblock %} · {{ UYGULAMA_ADI }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='stil.css') }}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+
+<div class="kabuk">
+  <nav class="yan-menu">
+    <div class="logo">
+      <strong>REDECOR</strong>
+      <span>Depo Takip</span>
+    </div>
+
+    <div class="menu-grup">
+      {{ menu_link('panel.anasayfa', 'Panel', '▣') }}
+      {{ menu_link('stok.liste', 'Stok Listesi', '▤', 'stok.') }}
+      {{ menu_link('urunler.liste', 'Ürünler', '◫', 'urunler.') }}
+    </div>
+
+    <div class="menu-grup">
+      <div class="menu-baslik">Hareketler</div>
+      <a href="{{ url_for('hareketler.yeni', tip='giris') }}"
+         class="{{ 'aktif' if request.endpoint == 'hareketler.yeni' else '' }}">
+        <span class="simge">↓</span>Giriş / Çıkış
+      </a>
+      {% if rol_yeterli(kullanici.rol, 'depo') %}
+        {{ menu_link('hareketler.transfer', 'Depo Transferi', '⇄') }}
+      {% endif %}
+      {{ menu_link('hareketler.liste', 'Hareket Dökümü', '≡') }}
+    </div>
+
+    <div class="menu-grup">
+      <div class="menu-baslik">Takip</div>
+      {{ menu_link('projeler.liste', 'Projeler', '◈', 'projeler.') }}
+      {{ menu_link('sayim.liste', 'Sayım', '☑', 'sayim.') }}
+      {{ menu_link('raporlar.anasayfa', 'Raporlar', '◔', 'raporlar.') }}
+    </div>
+
+    {% if rol_yeterli(kullanici.rol, 'depo') %}
+    <div class="menu-grup">
+      <div class="menu-baslik">Araçlar</div>
+      {{ menu_link('barkod.liste', 'Barkod / Etiket', '▥', 'barkod.') }}
+      {{ menu_link('aktarim.urun', 'Toplu Ürün Aktarımı', '⇪', 'aktarim.') }}
+    </div>
+
+    <div class="menu-grup">
+      <div class="menu-baslik">Tanımlar</div>
+      {{ menu_link('tanimlar.depolar', 'Depolar', '▢') }}
+      {{ menu_link('tanimlar.kategoriler', 'Kategoriler', '◇') }}
+      {{ menu_link('tanimlar.tedarikciler', 'Tedarikçiler', '◎') }}
+      {% if kullanici.rol == 'yonetici' %}
+        {{ menu_link('tanimlar.kullanicilar', 'Kullanıcılar', '◍') }}
+        {{ menu_link('tanimlar.gecmis', 'İşlem Geçmişi', '↺') }}
+        <a href="{{ url_for('tanimlar.yedek') }}"><span class="simge">⤓</span>Yedek Al</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="menu-alt">
+      <div class="ad">{{ kullanici.ad_soyad }}</div>
+      <div class="rol">{{ sabitler.ROLLER[kullanici.rol] }}</div>
+      <a href="{{ url_for('auth.sifre_degistir') }}">Şifre değiştir</a>
+      <a href="{{ url_for('auth.cikis') }}">Çıkış yap</a>
+    </div>
+  </nav>
+
+  <main class="icerik">
+    {% with mesajlar = get_flashed_messages(with_categories=true) %}
+      {% if mesajlar %}
+        <div class="yazdirma-gizle">
+          {% for tur, mesaj in mesajlar %}
+            <div class="mesaj {{ tur }}">
+              <span>{{ '✓' if tur == 'basari' else ('!' if tur == 'hata' else 'i') }}</span>
+              <span>{{ mesaj }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block icerik %}{% endblock %}
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='uygulama.js') }}"></script>

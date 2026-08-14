@@ -1,0 +1,28 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Giriş · {{ UYGULAMA_ADI }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='stil.css') }}">
+
+<div class="giris-sayfa">
+  <form class="giris-kutu" method="post">
+    <h1>REDECOR</h1>
+    <div class="alt">Depo Takip Sistemi</div>
+
+    {% with mesajlar = get_flashed_messages(with_categories=true) %}
+      {% for tur, mesaj in mesajlar %}
+        <div class="mesaj {{ tur }}"><span>{{ mesaj }}</span></div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="form-satir">
+      <label for="kullanici_adi">Kullanıcı adı</label>
+      <input type="text" id="kullanici_adi" name="kullanici_adi" autofocus
+             autocomplete="username" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="form-satir">
+      <label for="sifre">Şifre</label>
+      <input type="password" id="sifre" name="sifre" autocomplete="current-password">
+    </div>
+    <button type="submit" class="dugme ana">Giriş yap</button>
+  </form>
+</div>

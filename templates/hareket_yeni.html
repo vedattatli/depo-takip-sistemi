@@ -1,0 +1,125 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ bilgi.ad }}{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>{{ bilgi.ad }}</h1>
+    <div class="alt">{{ bilgi.aciklama }}</div>
+  </div>
+</div>
+
+<div class="sekmeler">
+  {% for t in izinli_tipler %}
+    {% set b = sabitler.HAREKET_TIPLERI[t] %}
+    <a href="{{ url_for('hareketler.yeni', tip=t) }}" class="{{ 'aktif' if t == tip }}">{{ b.ad }}</a>
+  {% endfor %}
+</div>
+
+<form method="post">
+  <input type="hidden" name="tip" value="{{ tip }}">
+
+  <div class="kart">
+    <div class="kart-basi"><h2>Belge Bilgileri</h2></div>
+    <div class="kart-govde">
+      <div class="izgara k4">
+        <div class="form-satir">
+          <label for="depo_id">Depo *</label>
+          <select id="depo_id" name="depo_id" data-depo-kaynak required>
+            {% for d in depolar %}<option value="{{ d.id }}">{{ d.ad }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="tarih">Tarih *</label>
+          <input type="date" id="tarih" name="tarih" value="{{ bugun }}" required>
+        </div>
+        <div class="form-satir">
+          <label for="belge_no">{{ 'İrsaliye / Fatura No' if bilgi.yon > 0 else 'Belge No' }}</label>
+          <input type="text" id="belge_no" name="belge_no" placeholder="opsiyonel">
+        </div>
+        {% if tip in ('giris', 'iade_cikis') %}
+        <div class="form-satir">
+          <label for="tedarikci_id">Tedarikçi</label>
+          <select id="tedarikci_id" name="tedarikci_id">
+            <option value="">Seçiniz</option>
+            {% for t in tedarikciler %}<option value="{{ t.id }}">{{ t.ad }}</option>{% endfor %}
+          </select>
+        </div>
+        {% else %}
+        <div class="form-satir">
+          <label for="proje_id">Proje / İş emri</label>
+          <select id="proje_id" name="proje_id">
+            <option value="">Seçiniz</option>
+            {% for p in projeler %}<option value="{{ p.id }}">{{ p.kod }} — {{ p.musteri }}</option>{% endfor %}
+          </select>
+          <div class="yardim">Proje seçerseniz maliyet raporunda görünür.</div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="form-satir" style="margin-bottom:0">
+        <label for="aciklama">Açıklama</label>
+        <input type="text" id="aciklama" name="aciklama"
+               placeholder="{{ 'kesim artığı, kırık cam vb.' if tip == 'fire' else 'opsiyonel' }}">
+      </div>
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi">
+      <h2>Ürünler</h2>
+      <button type="button" class="dugme mini" data-satir-ekle>+ Satır ekle</button>
+    </div>
+    <div class="kart-govde">
+      <div class="okut-kutusu">
+        <label for="barkod-okut">🔍 Barkod okut</label>
+        <input type="text" id="barkod-okut" autocomplete="off"
+               placeholder="El terminaliyle okutun ya da kodu yazıp Enter'a basın">
+        <span id="barkod-durum" class="kucuk barkod-durum">Okutulan ürün listeye eklenir.</span>
+      </div>
+
+      <table class="satir-tablo" id="satirlar">
+        <thead>
+          <tr>
+            <th style="width:26px"></th>
+            <th>Ürün (yazarak arayın)</th>
+            <th style="width:120px">Miktar</th>
+            {% if tip == 'giris' %}<th style="width:130px">Birim Fiyat (₺)</th>{% endif %}
+            <th style="width:200px">Satır açıklaması</th>
+            <th style="width:34px"></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <template id="satir-kalibi">
+        <tr>
+          <td class="satir-no kucuk"></td>
+          <td class="urun-hucre">
+            <input type="hidden" name="varyant_id" class="varyant-id">
+            <input type="text" class="urun-arama" autocomplete="off"
+                   placeholder="ürün adı, kod veya renk yazın…">
+            <div class="oneri-kutu"></div>
+            <div class="secim-bilgi kucuk"></div>
+          </td>
+          <td><input type="text" name="miktar" class="miktar-alan" inputmode="decimal" placeholder="0"></td>
+          {% if tip == 'giris' %}<td><input type="text" name="birim_fiyat" inputmode="decimal" placeholder="0,00"></td>{% endif %}
+          <td><input type="text" name="satir_aciklama" placeholder="opsiyonel"></td>
+          <td><button type="button" class="sil-dugme" title="Satırı sil">×</button></td>
+        </tr>
+      </template>
+
+      {% if bilgi.yon < 0 and kullanici.rol == 'yonetici' %}
+        <label class="onay" style="margin-top:12px;color:var(--kirmizi)">
+          <input type="checkbox" name="eksiye_izin" value="1">
+          Stok yetersiz olsa bile kaydet (stok eksiye düşebilir)
+        </label>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="eylemler">
+    <button type="submit" class="dugme ana">Kaydet</button>
+    <a class="dugme" href="{{ url_for('panel.anasayfa') }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

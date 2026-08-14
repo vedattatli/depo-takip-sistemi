@@ -1,0 +1,78 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ 'Proje Düzenle' if proje else 'Yeni Proje' }}{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div><h1>{{ 'Projeyi Düzenle' if proje else 'Yeni Proje' }}</h1></div>
+</div>
+
+<form method="post">
+  <div class="izgara k2">
+    <div class="kart">
+      <div class="kart-basi"><h2>Müşteri</h2></div>
+      <div class="kart-govde">
+        <div class="form-satir">
+          <label for="kod">Proje kodu *</label>
+          <input type="text" id="kod" name="kod" required
+                 value="{{ proje.kod if proje else onerilen_kod }}">
+        </div>
+        <div class="form-satir">
+          <label for="musteri">Müşteri adı *</label>
+          <input type="text" id="musteri" name="musteri" required autofocus
+                 value="{{ proje.musteri if proje else '' }}">
+        </div>
+        <div class="form-satir">
+          <label for="telefon">Telefon</label>
+          <input type="text" id="telefon" name="telefon" value="{{ proje.telefon or '' if proje }}">
+        </div>
+        <div class="form-satir">
+          <label for="adres">Adres</label>
+          <textarea id="adres" name="adres">{{ proje.adres or '' if proje }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="kart">
+      <div class="kart-basi"><h2>İş Bilgisi</h2></div>
+      <div class="kart-govde">
+        <div class="form-satir">
+          <label for="tip">İş tipi</label>
+          <select id="tip" name="tip">
+            <option value="">Seçiniz</option>
+            {% for kod, ad in tipler %}
+              <option value="{{ kod }}" {{ 'selected' if proje and proje.tip == kod }}>{{ ad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="durum">Durum</label>
+          <select id="durum" name="durum">
+            {% for kod, ad in durumlar %}
+              <option value="{{ kod }}" {{ 'selected' if proje and proje.durum == kod }}>{{ ad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="izgara k2">
+          <div class="form-satir">
+            <label for="baslangic">Başlangıç</label>
+            <input type="date" id="baslangic" name="baslangic" value="{{ proje.baslangic or '' if proje }}">
+          </div>
+          <div class="form-satir">
+            <label for="teslim">Teslim tarihi</label>
+            <input type="date" id="teslim" name="teslim" value="{{ proje.teslim or '' if proje }}">
+          </div>
+        </div>
+        <div class="form-satir">
+          <label for="notlar">Notlar</label>
+          <textarea id="notlar" name="notlar">{{ proje.notlar or '' if proje }}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eylemler">
+    <button type="submit" class="dugme ana">Kaydet</button>
+    <a class="dugme" href="{{ url_for('projeler.detay', proje_id=proje.id) if proje else url_for('projeler.liste') }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

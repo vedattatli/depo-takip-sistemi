@@ -1,0 +1,65 @@
+{% extends "taban.html" %}
+{% block baslik %}Ürünler{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Ürünler</h1>
+    <div class="alt">{{ urunler | length }} ürün · her ürünün altında renk/ölçü varyantları tutulur</div>
+  </div>
+  {% if rol_yeterli(kullanici.rol, 'depo') %}
+    <div class="eylemler"><a class="dugme ana" href="{{ url_for('urunler.yeni') }}">+ Yeni ürün</a></div>
+  {% endif %}
+</div>
+
+<form class="filtre-cubugu" method="get">
+  <div class="form-satir genis">
+    <label>Ara</label>
+    <input type="search" name="q" value="{{ arama }}" placeholder="ürün adı veya kodu…">
+  </div>
+  <div class="form-satir">
+    <label>Kategori</label>
+    <select name="kategori" data-otomatik-gonder>
+      <option value="">Hepsi</option>
+      {% for k in kategoriler %}<option value="{{ k.id }}" {{ 'selected' if secili_kategori == k.id }}>{{ k.ad }}</option>{% endfor %}
+    </select>
+  </div>
+  <label class="onay"><input type="checkbox" name="pasif" value="1" {{ 'checked' if pasif }} data-otomatik-gonder> Pasifleri de göster</label>
+  <button type="submit" class="dugme ana">Filtrele</button>
+  <a href="{{ url_for('urunler.liste') }}" class="dugme">Temizle</a>
+</form>
+
+<div class="kart">
+  <div class="kart-govde sikisik">
+    {% if urunler %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Kod</th><th>Ürün</th><th>Kategori</th><th>Tedarikçi</th>
+              <th>Birim</th><th class="orta">Varyant</th><th class="sayi">Toplam Stok</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for u in urunler %}
+          <tr>
+            <td class="kucuk">{{ u.kod }}</td>
+            <td><a href="{{ url_for('urunler.detay', urun_id=u.id) }}"><strong>{{ u.ad }}</strong></a></td>
+            <td class="kucuk">{{ u.kategori_ad or '-' }}</td>
+            <td class="kucuk">{{ u.tedarikci_ad or '-' }}</td>
+            <td class="kucuk">
+              {{ sabitler.BIRIM_ADLARI.get(u.ana_birim, u.ana_birim) }}
+              {% if u.ikincil_birim %}<div>1 = {{ u.birim_katsayi | sayi }} {{ u.ikincil_birim }}</div>{% endif %}
+            </td>
+            <td class="orta">{{ u.varyant_sayisi }}</td>
+            <td class="sayi">{{ u.toplam_stok | sayi }}</td>
+            <td class="orta">{% if not u.aktif %}<span class="rozet gri">pasif</span>{% endif %}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">◫</span>Ürün bulunamadı.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

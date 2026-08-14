@@ -1,0 +1,12 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hata {{ kod }} · {{ UYGULAMA_ADI }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='stil.css') }}">
+
+<div class="giris-sayfa">
+  <div class="giris-kutu" style="text-align:center">
+    <h1 style="font-size:44px;margin-bottom:6px">{{ kod }}</h1>
+    <div class="alt">{{ mesaj }}</div>
+    <a href="{{ url_for('panel.anasayfa') }}" class="dugme ana">Panele dön</a>
+  </div>
+</div>

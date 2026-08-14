@@ -1,0 +1,193 @@
+{% extends "taban.html" %}
+{% block baslik %}Sayım #{{ sayim.id }}{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Sayım #{{ sayim.id }} — {{ sayim.depo_ad }}</h1>
+    <div class="alt">
+      {{ sayim.tarih | kisa_tarih }} · {{ sayim.kullanici_ad or '-' }}
+      {% if sayim.notlar %} · {{ sayim.notlar }}{% endif %}
+      · <strong>{{ ozet.sayilan }} / {{ ozet.toplam }}</strong> kalem sayıldı
+    </div>
+  </div>
+  <div class="eylemler">
+    {% if sayim.durum == 'acik' and rol_yeterli(kullanici.rol, 'depo') %}
+      <form method="post" action="{{ url_for('sayim.tamamla', sayim_id=sayim.id) }}"
+            data-onay="Sayım kapatılacak ve farklar için stok düzeltme hareketi oluşturulacak. Onaylıyor musunuz?">
+        <button type="submit" class="dugme yesil">Sayımı tamamla</button>
+      </form>
+      {% if kullanici.rol == 'yonetici' %}
+      <form method="post" action="{{ url_for('sayim.iptal', sayim_id=sayim.id) }}"
+            data-onay="Sayım iptal edilsin mi? Stoklara dokunulmaz.">
+        <button type="submit" class="dugme kirmizi">İptal et</button>
+      </form>
+      {% endif %}
+    {% endif %}
+    <a class="dugme" href="{{ url_for('sayim.liste') }}">Sayım listesi</a>
+  </div>
+</div>
+
+{% if sayim.durum == 'acik' %}
+  <div class="mesaj bilgi">
+    <span>i</span>
+    <span>Sayım devam ediyor. Sistemdeki miktarlar bilerek gizlendi — gördüğünüz rakamı
+      değil, rafta saydığınız gerçek miktarı yazın. Boş bıraktığınız kalemler sayılmamış sayılır
+      ve stokları değişmez.</span>
+  </div>
+{% elif sayim.durum == 'tamamlandi' %}
+  <div class="mesaj {{ 'basari' if not farkli else 'hata' }}">
+    <span>{{ '✓' if not farkli else '!' }}</span>
+    <span>
+      {% if farkli %}
+        Sayım kapandı. <strong>{{ farkli | length }}</strong> kalemde fark çıktı ve stok düzeltildi.
+      {% else %}
+        Sayım kapandı, hiçbir kalemde fark çıkmadı.
+      {% endif %}
+    </span>
+  </div>
+{% endif %}
+
+{% if sayim.durum == 'tamamlandi' and farkli %}
+<div class="kart">
+  <div class="kart-basi"><h2>Fark Raporu</h2></div>
+  <div class="kart-govde sikisik">
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead><tr><th>Ürün</th><th class="sayi">Sistem</th><th class="sayi">Sayılan</th>
+                   <th class="sayi">Fark</th><th class="sayi">Tutar Etkisi</th></tr></thead>
+        <tbody>
+        {% for s in farkli %}
+          {% set fark = s.sayilan_miktar - s.sistem_miktar %}
+          <tr>
+            <td>
+              <a href="{{ url_for('stok.detay', varyant_id=s.varyant_id) }}">{{ s.urun_ad }}</a>
+              <div class="kucuk">{{ s.sku }}{% if s.renk_dekor %} · {{ s.renk_dekor }}{% endif %}</div>
+            </td>
+            <td class="sayi kucuk">{{ s.sistem_miktar | sayi }}</td>
+            <td class="sayi">{{ s.sayilan_miktar | sayi }}</td>
+            <td class="sayi">
+              <strong style="color:{{ 'var(--yesil)' if fark > 0 else 'var(--kirmizi)' }}">
+                {{ '+' if fark > 0 }}{{ fark | sayi }}
+              </strong> <span class="kucuk">{{ s.ana_birim }}</span>
+            </td>
+            <td class="sayi kucuk">{{ (fark * (s.birim_fiyat or 0)) | para }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<form class="filtre-cubugu" method="get">
+  <div class="form-satir genis">
+    <label>Ara</label>
+    <input type="search" name="q" value="{{ arama }}" placeholder="ürün, stok kodu, renk…">
+  </div>
+  <label class="onay"><input type="checkbox" name="bos" value="1" {{ 'checked' if sadece_bos }} data-otomatik-gonder> Sadece sayılmayanlar</label>
+  <button type="submit" class="dugme ana">Filtrele</button>
+  <a href="{{ url_for('sayim.detay', sayim_id=sayim.id) }}" class="dugme">Temizle</a>
+</form>
+
+<form method="post" action="{{ url_for('sayim.kaydet', sayim_id=sayim.id) }}">
+  <input type="hidden" name="q" value="{{ arama }}">
+  <input type="hidden" name="bos" value="{{ '1' if sadece_bos else '' }}">
+
+  <div class="kart">
+    <div class="kart-basi">
+      <h2>Sayım Listesi ({{ satirlar | length }} kalem)</h2>
+      {% if sayim.durum == 'acik' and rol_yeterli(kullanici.rol, 'depo') %}
+        <button type="submit" class="dugme ana">Sayılanları kaydet</button>
+      {% endif %}
+    </div>
+
+    {% if sayim.durum == 'acik' and rol_yeterli(kullanici.rol, 'depo') %}
+    <div style="padding:12px 16px 0">
+      <div class="okut-kutusu">
+        <label for="sayim-barkod">🔍 Barkod okut</label>
+        <input type="text" id="sayim-barkod" autocomplete="off"
+               placeholder="Okutunca o kalemin satırına atlar">
+        <label class="onay" style="white-space:nowrap">
+          <input type="checkbox" id="sayim-tally"> okuttukça 1 artır
+        </label>
+        <span id="sayim-barkod-durum" class="kucuk barkod-durum"></span>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="kart-govde sikisik">
+      {% if satirlar %}
+      <div class="tablo-sar">
+        <table class="liste">
+          <thead>
+            <tr>
+              <th>Ürün</th><th>Stok Kodu</th><th>Kategori</th>
+              {% if sayim.durum != 'acik' %}<th class="sayi">Sistem</th>{% endif %}
+              <th class="sayi" style="width:150px">Sayılan Miktar</th>
+              {% if sayim.durum != 'acik' %}<th class="sayi">Fark</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+          {% for s in satirlar %}
+            <tr>
+              <td>
+                <a href="{{ url_for('stok.detay', varyant_id=s.varyant_id) }}">{{ s.urun_ad }}</a>
+                {% if s.renk_dekor or s.olcu %}
+                  <div class="kucuk">{{ s.renk_dekor or '' }}{% if s.renk_dekor and s.olcu %} · {% endif %}{{ s.olcu or '' }}</div>
+                {% endif %}
+              </td>
+              <td class="kucuk">{{ s.sku }}</td>
+              <td class="kucuk">{{ s.kategori_ad or '-' }}</td>
+              {% if sayim.durum != 'acik' %}
+                <td class="sayi kucuk">{{ s.sistem_miktar | sayi }}</td>
+              {% endif %}
+              <td class="sayi">
+                {% if sayim.durum == 'acik' and rol_yeterli(kullanici.rol, 'depo') %}
+                  <input type="text" class="sayim-alan" inputmode="decimal"
+                         name="sayilan_{{ s.id }}" style="text-align:right"
+                         data-varyant="{{ s.varyant_id }}"
+                         value="{{ s.sayilan_miktar | sayi if s.sayilan_miktar is not none else '' }}"
+                         placeholder="{{ s.ana_birim }}">
+                {% else %}
+                  {{ s.sayilan_miktar | sayi if s.sayilan_miktar is not none else '—' }}
+                  <span class="kucuk">{{ s.ana_birim }}</span>
+                {% endif %}
+              </td>
+              {% if sayim.durum != 'acik' %}
+                <td class="sayi">
+                  {% if s.sayilan_miktar is not none %}
+                    {% set fark = s.sayilan_miktar - s.sistem_miktar %}
+                    {% if fark == 0 %}
+                      <span class="rozet yesil">tam</span>
+                    {% else %}
+                      <strong style="color:{{ 'var(--yesil)' if fark > 0 else 'var(--kirmizi)' }}">
+                        {{ '+' if fark > 0 }}{{ fark | sayi }}</strong>
+                    {% endif %}
+                  {% else %}
+                    <span class="kucuk">sayılmadı</span>
+                  {% endif %}
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="bos-durum"><span class="buyuk">☑</span>Bu filtreyle eşleşen kalem yok.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if sayim.durum == 'acik' and rol_yeterli(kullanici.rol, 'depo') %}
+    <div class="eylemler">
+      <button type="submit" class="dugme ana">Sayılanları kaydet</button>
+      <span class="kucuk" style="align-self:center;color:var(--metin-soluk)">
+        Enter tuşuyla bir alt satıra geçebilirsiniz.
+      </span>
+    </div>
+  {% endif %}
+</form>
+{% endblock %}

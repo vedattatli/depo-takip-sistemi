@@ -1,0 +1,178 @@
+{% extends "taban.html" %}
+{% block baslik %}Toplu Ürün Aktarımı{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Toplu Ürün Aktarımı</h1>
+    <div class="alt">Mevcut ürün listenizi Excel'den tek seferde aktarın.</div>
+  </div>
+  <div class="eylemler">
+    <a class="dugme" href="{{ url_for('aktarim.sablon') }}">⤓ Örnek şablonu indir</a>
+  </div>
+</div>
+
+{% if asama == 'basla' %}
+<div class="izgara k2">
+  <div class="kart">
+    <div class="kart-basi"><h2>Dosya Yükle</h2></div>
+    <div class="kart-govde">
+      <form method="post" enctype="multipart/form-data">
+        <div class="form-satir">
+          <label for="dosya">CSV dosyası</label>
+          <input type="file" id="dosya" name="dosya" accept=".csv,text/csv" required>
+          <div class="yardim">
+            Excel'de <em>Dosya → Farklı Kaydet → CSV UTF-8 (virgülle ayrılmış)</em>
+            seçin. Noktalı virgülle ayrılmış dosyalar da okunur.
+          </div>
+        </div>
+        <button type="submit" class="dugme ana">Yükle ve kontrol et</button>
+      </form>
+      <div class="yardim" style="margin-top:12px">
+        Yüklediğinizde hiçbir şey kaydedilmez; önce kontrol raporunu görür,
+        sonra onaylarsınız.
+      </div>
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi"><h2>Sütun Düzeni</h2></div>
+    <div class="kart-govde" style="font-size:13px">
+      <p style="margin-top:0;color:var(--metin-soluk)">
+        Sütunlar bu sırada olmalı. Zorunlu olanlar: <strong>Ürün Kodu</strong> ve
+        <strong>Ürün Adı</strong>. Diğerleri boş bırakılabilir.
+      </p>
+      <ol style="margin:0;padding-left:20px;line-height:1.75">
+        {% for b in basliklar %}<li>{{ b }}</li>{% endfor %}
+      </ol>
+      <div class="yardim" style="margin-top:12px">
+        Aynı ürünün farklı renkleri için <strong>Ürün Kodu'nu aynı yazıp</strong>
+        Renk/Dekor'u değiştirin — sistem tek ürün altında varyant açar.
+        Kategori ve tedarikçi yoksa kendiliğinden oluşturulur.
+        Açılış Stoğu yazarsanız bir mal girişi hareketi olarak kaydedilir.
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if asama == 'onizleme' %}
+<div class="izgara k4" style="margin-bottom:16px">
+  <div class="sayac iyi">
+    <div class="etiket">Aktarılacak Satır</div>
+    <div class="deger">{{ toplam }}</div>
+    <div class="not">{{ ozet.yeni_urun }} yeni ürün</div>
+  </div>
+  <div class="sayac {{ 'uyari' if hatalar }}">
+    <div class="etiket">Hatalı Satır</div>
+    <div class="deger">{{ hatalar | length }}</div>
+    <div class="not">{{ 'aktarılmayacak' if hatalar else 'sorun yok' }}</div>
+  </div>
+  <div class="sayac">
+    <div class="etiket">Yeni Tanım</div>
+    <div class="deger">{{ ozet.yeni_kategori + ozet.yeni_tedarikci }}</div>
+    <div class="not">{{ ozet.yeni_kategori }} kategori · {{ ozet.yeni_tedarikci }} tedarikçi</div>
+  </div>
+  <div class="sayac">
+    <div class="etiket">Açılış Stoğu</div>
+    <div class="deger">{{ ozet.acilis_stok }}</div>
+    <div class="not">kalemde giriş hareketi oluşacak</div>
+  </div>
+</div>
+
+{% if hatalar %}
+<div class="kart">
+  <div class="kart-basi"><h2>Aktarılmayacak Satırlar</h2></div>
+  <div class="kart-govde sikisik">
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead><tr><th style="width:80px">Satır</th><th style="width:220px">Ürün</th><th>Sebep</th></tr></thead>
+        <tbody>
+        {% for h in hatalar %}
+          <tr>
+            <td class="kucuk">{{ h.no }}</td>
+            <td class="kucuk">{{ h.urun or '-' }}</td>
+            <td class="kucuk" style="color:var(--kirmizi)">{{ h.mesajlar | join(' · ') }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="kart">
+  <div class="kart-basi">
+    <h2>Önizleme{% if toplam > satirlar | length %} (ilk {{ satirlar | length }} satır){% endif %}</h2>
+  </div>
+  <div class="kart-govde sikisik">
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Ürün Kodu</th><th>Ürün</th><th>Renk / Ölçü</th><th>Kategori</th>
+              <th>Birim</th><th class="sayi">Min.</th><th class="sayi">Fiyat</th>
+              <th class="sayi">Açılış</th><th>Not</th></tr>
+        </thead>
+        <tbody>
+        {% for s in satirlar %}
+          <tr>
+            <td class="kucuk">{{ s.urun_kod }}</td>
+            <td>{{ s.urun_ad }}</td>
+            <td class="kucuk">{{ s.renk or '' }}{% if s.renk and s.olcu %} · {% endif %}{{ s.olcu or '' }}</td>
+            <td class="kucuk">{{ s.kategori or '-' }}</td>
+            <td class="kucuk">{{ s.birim }}{% if s.ikincil %} → {{ s.ikincil }} ×{{ s.katsayi | sayi }}{% endif %}</td>
+            <td class="sayi kucuk">{{ s.min_stok | sayi }}</td>
+            <td class="sayi kucuk">{{ s.fiyat | para }}</td>
+            <td class="sayi kucuk">{{ s.acilis | sayi if s.acilis else '-' }}</td>
+            <td class="kucuk" style="color:var(--turuncu)">{{ s.uyarilar | join(' · ') }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<form method="post">
+  <div class="eylemler">
+    <button type="submit" name="onayla" value="1" class="dugme ana"
+            {{ 'disabled' if not toplam }}>
+      {{ toplam }} satırı aktar
+    </button>
+    <a class="dugme" href="{{ url_for('aktarim.urun') }}">Vazgeç</a>
+  </div>
+</form>
+{% endif %}
+
+{% if asama == 'bitti' %}
+<div class="mesaj basari">
+  <span>✓</span>
+  <span>Aktarım tamamlandı.</span>
+</div>
+
+<div class="izgara k3">
+  <div class="sayac iyi">
+    <div class="etiket">Eklenen Varyant</div>
+    <div class="deger">{{ sonuc.varyant }}</div>
+    <div class="not">{{ sonuc.urun }} yeni ürün altında</div>
+  </div>
+  <div class="sayac">
+    <div class="etiket">Yeni Tanım</div>
+    <div class="deger">{{ sonuc.kategori + sonuc.tedarikci }}</div>
+    <div class="not">{{ sonuc.kategori }} kategori · {{ sonuc.tedarikci }} tedarikçi</div>
+  </div>
+  <div class="sayac">
+    <div class="etiket">Açılış Stoğu</div>
+    <div class="deger">{{ sonuc.acilis }}</div>
+    <div class="not">{{ sonuc.atlanan }} kalem zaten kayıtlıydı, atlandı</div>
+  </div>
+</div>
+
+<div class="eylemler">
+  <a class="dugme ana" href="{{ url_for('stok.liste') }}">Stok listesine git</a>
+  <a class="dugme" href="{{ url_for('barkod.liste') }}">Barkod üret / etiket bas</a>
+  <a class="dugme" href="{{ url_for('aktarim.urun') }}">Yeni dosya aktar</a>
+</div>
+{% endif %}
+{% endblock %}

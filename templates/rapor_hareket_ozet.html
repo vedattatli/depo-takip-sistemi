@@ -1,0 +1,81 @@
+{% extends "taban.html" %}
+{% block baslik %}Hareket Özeti{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Hareket Özeti</h1>
+    <div class="alt">{{ bas | kisa_tarih }} – {{ bit | kisa_tarih }} arası depo trafiği</div>
+  </div>
+  <form class="eylemler" method="get">
+    <select name="depo" data-otomatik-gonder>
+      <option value="">Tüm depolar</option>
+      {% for d in depolar %}<option value="{{ d.id }}" {{ 'selected' if secili_depo == d.id }}>{{ d.ad }}</option>{% endfor %}
+    </select>
+    <input type="date" name="bas" value="{{ bas }}">
+    <input type="date" name="bit" value="{{ bit }}">
+    <button type="submit" class="dugme ana">Getir</button>
+  </form>
+</div>
+
+<div class="izgara k2">
+  <div class="kart">
+    <div class="kart-basi"><h2>İşlem Tipine Göre</h2></div>
+    <div class="kart-govde sikisik">
+      {% if tipler %}
+      <table class="liste">
+        <thead><tr><th>İşlem</th><th class="orta">Kayıt</th><th class="sayi">Miktar</th><th class="sayi">Tutar</th></tr></thead>
+        <tbody>
+        {% for t in tipler %}
+          {% set b = HAREKET_TIPLERI.get(t.tip, {'ad': t.tip, 'renk': 'gri'}) %}
+          <tr>
+            <td><span class="rozet {{ b.renk }}">{{ b.ad }}</span></td>
+            <td class="orta kucuk">{{ t.adet }}</td>
+            <td class="sayi">{{ t.miktar | sayi }}</td>
+            <td class="sayi">{{ t.tutar | para }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="bos-durum">Bu dönemde hareket yok.</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi"><h2>Kullanıcıya Göre</h2></div>
+    <div class="kart-govde sikisik">
+      {% if kullanicilar %}
+      <table class="liste">
+        <thead><tr><th>Kullanıcı</th><th class="sayi">İşlem Sayısı</th></tr></thead>
+        <tbody>
+        {% for k in kullanicilar %}
+          <tr><td>{{ k.ad }}</td><td class="sayi">{{ k.adet }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}<div class="bos-durum">Kayıt yok.</div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-basi"><h2>Günlük Hareket Sayısı</h2></div>
+  <div class="kart-govde sikisik">
+    {% if gunluk %}
+    {% set enbuyuk = gunluk | map(attribute='adet') | max %}
+    <table class="liste">
+      <thead><tr><th style="width:130px">Tarih</th><th class="sayi" style="width:80px">Kayıt</th><th></th></tr></thead>
+      <tbody>
+      {% for g in gunluk %}
+        <tr>
+          <td class="kucuk">{{ g.tarih | kisa_tarih }}</td>
+          <td class="sayi">{{ g.adet }}</td>
+          <td><div class="olcer"><span style="width:{{ (g.adet / enbuyuk * 100) }}%"></span></div></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}<div class="bos-durum">Bu dönemde hareket yok.</div>{% endif %}
+  </div>
+</div>
+{% endblock %}

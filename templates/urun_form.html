@@ -1,0 +1,99 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ 'Ürün Düzenle' if urun else 'Yeni Ürün' }}{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>{{ 'Ürünü Düzenle' if urun else 'Yeni Ürün' }}</h1>
+    <div class="alt">Ürünü kaydettikten sonra renk/ölçü varyantlarını ekleyeceksiniz.</div>
+  </div>
+</div>
+
+<form method="post">
+  <div class="izgara k2">
+    <div class="kart">
+      <div class="kart-basi"><h2>Temel Bilgiler</h2></div>
+      <div class="kart-govde">
+        <div class="form-satir">
+          <label for="kod">Ürün kodu *</label>
+          <input type="text" id="kod" name="kod" required autofocus
+                 value="{{ request.form.kod or urun.kod if urun else request.form.kod or '' }}"
+                 placeholder="örn. PRF-70">
+          <div class="yardim">Kısa ve akılda kalıcı olsun; varyant kodları bundan türetilir.</div>
+        </div>
+        <div class="form-satir">
+          <label for="ad">Ürün adı *</label>
+          <input type="text" id="ad" name="ad" required
+                 value="{{ request.form.ad or urun.ad if urun else request.form.ad or '' }}"
+                 placeholder="örn. PVC Pencere Profili 70mm">
+        </div>
+        <div class="form-satir">
+          <label for="kategori_id">Kategori</label>
+          <select id="kategori_id" name="kategori_id">
+            <option value="">Seçiniz</option>
+            {% for k in kategoriler %}
+              <option value="{{ k.id }}" {{ 'selected' if urun and urun.kategori_id == k.id }}>{{ k.ad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="tedarikci_id">Tedarikçi</label>
+          <select id="tedarikci_id" name="tedarikci_id">
+            <option value="">Seçiniz</option>
+            {% for t in tedarikciler %}
+              <option value="{{ t.id }}" {{ 'selected' if urun and urun.tedarikci_id == t.id }}>{{ t.ad }}</option>
+            {% endfor %}
+          </select>
+          <div class="yardim">Sipariş önerisi raporu tedarikçinin teslim süresini kullanır.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kart">
+      <div class="kart-basi"><h2>Birim</h2></div>
+      <div class="kart-govde">
+        <div class="form-satir">
+          <label for="ana_birim">Stok birimi *</label>
+          <select id="ana_birim" name="ana_birim">
+            {% for kod, ad in sabitler.BIRIMLER %}
+              <option value="{{ kod }}" {{ 'selected' if urun and urun.ana_birim == kod }}>{{ ad }}</option>
+            {% endfor %}
+          </select>
+          <div class="yardim">Stok bu birimde tutulur. Sonradan değiştirmek geçmiş kayıtları bozar.</div>
+        </div>
+        <div class="form-satir">
+          <label for="ikincil_birim">İkincil birim (isteğe bağlı)</label>
+          <select id="ikincil_birim" name="ikincil_birim">
+            <option value="">Yok</option>
+            {% for kod, ad in sabitler.BIRIMLER %}
+              <option value="{{ kod }}" {{ 'selected' if urun and urun.ikincil_birim == kod }}>{{ ad }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-satir">
+          <label for="birim_katsayi">Çevrim katsayısı</label>
+          <input type="text" id="birim_katsayi" name="birim_katsayi"
+                 value="{{ urun.birim_katsayi if urun and urun.birim_katsayi else '' }}"
+                 placeholder="örn. 2.8">
+          <div class="yardim">
+            1 stok birimi kaç ikincil birim eder? Örnek: 1 levha = <strong>2.8</strong> m²,
+            1 boy = <strong>6.5</strong> metre.
+          </div>
+        </div>
+        <div class="form-satir">
+          <label for="aciklama">Açıklama</label>
+          <textarea id="aciklama" name="aciklama">{{ urun.aciklama or '' if urun }}</textarea>
+        </div>
+        <label class="onay">
+          <input type="checkbox" name="aktif" value="1" {{ 'checked' if not urun or urun.aktif }}> Aktif
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="eylemler">
+    <button type="submit" class="dugme ana">{{ 'Kaydet' if urun else 'Kaydet ve varyant ekle' }}</button>
+    <a class="dugme" href="{{ url_for('urunler.detay', urun_id=urun.id) if urun else url_for('urunler.liste') }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "taban.html" %}
+{% block baslik %}Sipariş Önerisi{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Sipariş Önerisi</h1>
+    <div class="alt">
+      Son {{ gun }} günün tüketim hızı + tedarikçinin teslim süresi. Stok bitmeden
+      sipariş verilmesi gereken kalemler burada çıkar.
+    </div>
+  </div>
+  <form class="eylemler" method="get">
+    <select name="gun" data-otomatik-gonder>
+      <option value="30" {{ 'selected' if gun == 30 }}>Son 30 gün</option>
+      <option value="90" {{ 'selected' if gun == 90 }}>Son 90 gün</option>
+      <option value="180" {{ 'selected' if gun == 180 }}>Son 180 gün</option>
+    </select>
+    <button type="button" class="dugme" onclick="window.print()">Yazdır</button>
+  </form>
+</div>
+
+<div class="kart">
+  <div class="kart-basi">
+    <h2>{{ oneriler | length }} kalem sipariş bekliyor</h2>
+  </div>
+  <div class="kart-govde sikisik">
+    {% if oneriler %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Ürün</th><th>Stok Kodu</th><th>Tedarikçi</th>
+              <th class="sayi">Kullanılabilir</th><th class="sayi">Günlük Tüketim</th>
+              <th class="sayi">Kalan Gün</th><th class="sayi">Teslim</th>
+              <th class="sayi">Önerilen Sipariş</th><th>Sebep</th></tr>
+        </thead>
+        <tbody>
+        {% for o in oneriler %}
+          <tr>
+            <td>
+              <a href="{{ url_for('stok.detay', varyant_id=o.varyant_id) }}">{{ o.urun_ad }}</a>
+              {% if o.renk_dekor or o.olcu %}
+                <div class="kucuk">{{ o.renk_dekor or '' }}{% if o.renk_dekor and o.olcu %} · {% endif %}{{ o.olcu or '' }}</div>
+              {% endif %}
+            </td>
+            <td class="kucuk">{{ o.sku }}</td>
+            <td class="kucuk">{{ o.tedarikci_ad or '—' }}</td>
+            <td class="sayi">
+              <strong style="color:{{ 'var(--kirmizi)' if o.kullanilabilir <= 0 else 'inherit' }}">
+                {{ o.kullanilabilir | sayi }}</strong>
+              <span class="kucuk">{{ o.ana_birim }}</span>
+            </td>
+            <td class="sayi kucuk">{{ o.gunluk | sayi(2) }}</td>
+            <td class="sayi">
+              {% if o.kalan_gun is none %}
+                <span class="kucuk">—</span>
+              {% else %}
+                <span class="rozet {{ 'kirmizi' if o.kalan_gun <= o.teslim_gun else 'turuncu' }}">
+                  {{ o.kalan_gun | round | int }} gün
+                </span>
+              {% endif %}
+            </td>
+            <td class="sayi kucuk">{{ o.teslim_gun }} gün</td>
+            <td class="sayi"><strong>{{ o.onerilen | sayi }}</strong> <span class="kucuk">{{ o.ana_birim }}</span></td>
+            <td class="kucuk">{{ o.sebep }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">✓</span>
+        Şu an sipariş verilmesi gereken kalem yok.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-govde" style="font-size:13px;color:var(--metin-soluk)">
+    <strong>Önerilen sipariş nasıl hesaplanıyor?</strong><br>
+    Günlük tüketim × (tedarik süresi + 30 gün emniyet stoğu) hedeflenir; mevcut kullanılabilir
+    stok bundan düşülür. Minimum stok seviyesi bu hedefin altındaysa minimum seviye taban alınır.
+    Hareket girilmemiş kalemler için tüketim hızı hesaplanamaz; onlar sadece minimum stok
+    seviyesine göre listeye girer.
+  </div>
+</div>
+{% endblock %}

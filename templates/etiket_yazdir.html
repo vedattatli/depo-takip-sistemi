@@ -1,0 +1,60 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etiketler · {{ UYGULAMA_ADI }}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='stil.css') }}">
+<style>
+  /* A4'e 3 sütun × 8 satır = 24 etiket sığacak şekilde ayarlandı */
+  body { background: #fff; }
+  .arac-cubugu {
+    display: flex; gap: 10px; align-items: center; padding: 14px 18px;
+    border-bottom: 1px solid var(--kenar); background: var(--kart);
+    position: sticky; top: 0; z-index: 5;
+  }
+  .etiket-sayfa {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 4mm; padding: 8mm; max-width: 210mm; margin: 0 auto;
+  }
+  .etiket {
+    border: 1px dashed #b9c1cd; border-radius: 3px; padding: 3mm 2mm 2mm;
+    text-align: center; break-inside: avoid; page-break-inside: avoid;
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 30mm;
+  }
+  .etiket .ad { font-size: 10px; font-weight: 700; line-height: 1.25; }
+  .etiket .detay { font-size: 9px; color: #444; line-height: 1.25; margin-bottom: 1mm; }
+  .etiket svg { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  .etiket .kod { font-size: 9px; font-family: ui-monospace, Menlo, monospace; letter-spacing: .5px; }
+  @media print {
+    .arac-cubugu { display: none; }
+    .etiket-sayfa { padding: 0; gap: 3mm; max-width: none; }
+    .etiket { border-color: #ddd; }
+    @page { size: A4; margin: 8mm; }
+  }
+</style>
+
+<div class="arac-cubugu">
+  <button class="dugme ana" onclick="window.print()">🖶 Yazdır</button>
+  <a class="dugme" href="{{ url_for('barkod.liste') }}">← Barkod listesine dön</a>
+  <span class="kucuk" style="color:var(--metin-soluk)">
+    {{ etiketler | length }} etiket · A4 sayfaya 24 adet sığar ·
+    yazdırma penceresinde ölçeklemeyi <strong>%100</strong> bırakın, yoksa barkod okunmaz
+  </span>
+</div>
+
+<div class="etiket-sayfa">
+  {% for e in etiketler %}
+    <div class="etiket">
+      <div>
+        <div class="ad">{{ e.v.urun_ad }}</div>
+        <div class="detay">
+          {{ e.v.renk_dekor or '' }}{% if e.v.renk_dekor and e.v.olcu %}<br>{% endif %}{{ e.v.olcu or '' }}
+        </div>
+      </div>
+      <div>
+        {{ e.svg | safe }}
+        <div class="kod">{{ e.kod }}</div>
+        <div class="detay">{{ e.v.sku }}</div>
+      </div>
+    </div>
+  {% endfor %}
+</div>

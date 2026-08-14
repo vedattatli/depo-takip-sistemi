@@ -1,0 +1,31 @@
+{% extends "taban.html" %}
+{% block baslik %}Şifre Değiştir{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div><h1>Şifre Değiştir</h1>
+  <div class="alt">{{ kullanici.kullanici_adi }} hesabının şifresi</div></div>
+</div>
+
+<div class="kart" style="max-width:440px">
+  <div class="kart-govde">
+    <form method="post">
+      <div class="form-satir">
+        <label for="mevcut">Mevcut şifre</label>
+        <input type="password" id="mevcut" name="mevcut" autocomplete="current-password" autofocus>
+      </div>
+      <div class="form-satir">
+        <label for="yeni">Yeni şifre</label>
+        <input type="password" id="yeni" name="yeni" autocomplete="new-password">
+        <div class="yardim">En az 4 karakter.</div>
+      </div>
+      <div class="form-satir">
+        <label for="yeni2">Yeni şifre (tekrar)</label>
+        <input type="password" id="yeni2" name="yeni2" autocomplete="new-password">
+      </div>
+      <button type="submit" class="dugme ana">Kaydet</button>
+      <a href="{{ url_for('panel.anasayfa') }}" class="dugme">Vazgeç</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

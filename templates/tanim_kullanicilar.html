@@ -1,0 +1,90 @@
+{% extends "taban.html" %}
+{% block baslik %}Kullanıcılar{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Kullanıcılar</h1>
+    <div class="alt">Her hareketin kim tarafından yapıldığı kayda geçer — herkese kendi hesabını açın.</div>
+  </div>
+</div>
+
+<div class="izgara k2">
+  <div class="kart">
+    <div class="kart-basi"><h2>{{ 'Kullanıcıyı Düzenle' if duzenle else 'Yeni Kullanıcı' }}</h2></div>
+    <div class="kart-govde">
+      <form method="post">
+        {% if duzenle %}<input type="hidden" name="id" value="{{ duzenle.id }}">{% endif %}
+        <div class="form-satir">
+          <label for="ad_soyad">Ad soyad *</label>
+          <input type="text" id="ad_soyad" name="ad_soyad" required
+                 value="{{ duzenle.ad_soyad if duzenle else '' }}">
+        </div>
+        <div class="form-satir">
+          <label for="kullanici_adi">Kullanıcı adı *</label>
+          <input type="text" id="kullanici_adi" name="kullanici_adi" required
+                 autocapitalize="off" spellcheck="false"
+                 value="{{ duzenle.kullanici_adi if duzenle else '' }}">
+        </div>
+        <div class="form-satir">
+          <label for="rol">Rol *</label>
+          <select id="rol" name="rol">
+            {% for kod, ad in roller.items() %}
+              <option value="{{ kod }}" {{ 'selected' if duzenle and duzenle.rol == kod }}>{{ ad }}</option>
+            {% endfor %}
+          </select>
+          <div class="yardim">
+            <strong>Usta:</strong> stok görür, sadece üretim sarfı girer.<br>
+            <strong>Depo Sorumlusu:</strong> tüm hareketler, ürün/tanım yönetimi, sayım.<br>
+            <strong>Yönetici:</strong> hepsi + kullanıcılar, hareket iptali, işlem geçmişi.
+          </div>
+        </div>
+        <div class="form-satir">
+          <label for="sifre">{{ 'Yeni şifre (boş bırakırsanız değişmez)' if duzenle else 'Şifre *' }}</label>
+          <input type="password" id="sifre" name="sifre" autocomplete="new-password">
+        </div>
+        <label class="onay" style="margin-bottom:14px">
+          <input type="checkbox" name="aktif" value="1" {{ 'checked' if not duzenle or duzenle.aktif }}> Aktif
+        </label>
+        <div>
+          <button type="submit" class="dugme ana">Kaydet</button>
+          {% if duzenle %}<a class="dugme" href="{{ url_for('tanimlar.kullanicilar') }}">Vazgeç</a>{% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi"><h2>Kayıtlı Kullanıcılar</h2></div>
+    <div class="kart-govde sikisik">
+      <table class="liste">
+        <thead><tr><th>Kullanıcı</th><th>Rol</th><th class="orta">Hareket</th><th></th></tr></thead>
+        <tbody>
+        {% for s in satirlar %}
+          <tr style="{{ 'opacity:.55' if not s.aktif }}">
+            <td>
+              <strong>{{ s.ad_soyad }}</strong>
+              {% if not s.aktif %}<span class="rozet gri">pasif</span>{% endif %}
+              <div class="kucuk">{{ s.kullanici_adi }}</div>
+            </td>
+            <td><span class="rozet {{ 'mor' if s.rol == 'yonetici' else ('mavi' if s.rol == 'depo' else 'gri') }}">
+              {{ roller[s.rol] }}</span></td>
+            <td class="orta kucuk">{{ s.hareket_sayisi }}</td>
+            <td style="white-space:nowrap">
+              <a class="dugme mini" href="{{ url_for('tanimlar.kullanicilar', duzenle=s.id) }}">Düzenle</a>
+              {% if s.id != kullanici.id %}
+              <form method="post" style="display:inline"
+                    action="{{ url_for('tanimlar.kullanici_durum', kid=s.id) }}"
+                    data-onay="{{ s.ad_soyad }} {{ 'pasife alınsın' if s.aktif else 'aktifleştirilsin' }} mı?">
+                <button class="dugme mini" type="submit">{{ 'Pasife al' if s.aktif else 'Aktifleştir' }}</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "taban.html" %}
+{% block baslik %}Barkod / Etiket{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Barkod ve Etiket</h1>
+    <div class="alt">
+      Kalemlere barkod atayın, raf etiketlerini basın. El terminali (USB/bluetooth
+      okuyucu) klavye gibi çalıştığı için ek kurulum gerekmez.
+    </div>
+  </div>
+</div>
+
+{% if barkodsuz %}
+<div class="mesaj bilgi">
+  <span>i</span>
+  <span>
+    Listede <strong>{{ barkodsuz }}</strong> kalemin barkodu yok. Tedarikçinin
+    kutu üzerindeki barkodunu kullanacaksanız ürün kartından elle girin;
+    kendi etiketinizi basacaksanız aşağıdan barkod üretin.
+  </span>
+</div>
+{% endif %}
+
+<form class="filtre-cubugu" method="get">
+  <div class="form-satir genis">
+    <label>Ara</label>
+    <input type="search" name="q" value="{{ arama }}" placeholder="ürün adı, kod, renk…">
+  </div>
+  <div class="form-satir">
+    <label>Kategori</label>
+    <select name="kategori" data-otomatik-gonder>
+      <option value="">Hepsi</option>
+      {% for k in kategoriler %}
+        <option value="{{ k.id }}" {{ 'selected' if secili_kategori == k.id }}>{{ k.ad }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <label class="onay">
+    <input type="checkbox" name="eksik" value="1" {{ 'checked' if eksik }} data-otomatik-gonder>
+    Sadece barkodu olmayanlar
+  </label>
+  <button type="submit" class="dugme ana">Filtrele</button>
+  <a href="{{ url_for('barkod.liste') }}" class="dugme">Temizle</a>
+</form>
+
+<form method="post">
+  <div class="kart">
+    <div class="kart-basi">
+      <h2>{{ satirlar | length }} kalem</h2>
+      <div class="eylemler">
+        <label class="onay" style="margin-right:6px">
+          Her kalemden
+          <input type="number" name="adet" value="1" min="1" max="50"
+                 style="width:62px;min-width:0"> etiket
+        </label>
+        <button type="submit" class="dugme ana"
+                formaction="{{ url_for('barkod.etiket') }}">🖶 Etiket bas</button>
+        <button type="submit" class="dugme"
+                formaction="{{ url_for('barkod.uret') }}">Seçilenlere barkod üret</button>
+      </div>
+    </div>
+    <div class="kart-govde sikisik">
+      {% if satirlar %}
+      <div class="tablo-sar">
+        <table class="liste">
+          <thead>
+            <tr>
+              <th style="width:34px"><input type="checkbox" data-hepsini-sec></th>
+              <th>Ürün / Varyant</th>
+              <th>Stok Kodu</th>
+              <th>Barkod</th>
+              <th style="width:200px">Önizleme</th>
+              <th class="sayi">Stok</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for s in satirlar %}
+            <tr>
+              <td><input type="checkbox" name="varyant_id" value="{{ s.varyant_id }}"></td>
+              <td>
+                <a href="{{ url_for('stok.detay', varyant_id=s.varyant_id) }}">{{ s.urun_ad }}</a>
+                {% if s.renk_dekor or s.olcu %}
+                  <div class="kucuk">{{ s.renk_dekor or '' }}{% if s.renk_dekor and s.olcu %} · {% endif %}{{ s.olcu or '' }}</div>
+                {% endif %}
+              </td>
+              <td class="kucuk">{{ s.sku }}</td>
+              <td class="kucuk">
+                {% if s.barkod %}{{ s.barkod }}
+                {% else %}<span class="rozet turuncu">yok</span>{% endif %}
+              </td>
+              <td>
+                {% if s.barkod %}
+                  <img src="{{ url_for('barkod.tekil_svg', varyant_id=s.varyant_id) }}"
+                       alt="{{ s.barkod }}" style="height:34px">
+                {% else %}<span class="kucuk">—</span>{% endif %}
+              </td>
+              <td class="sayi kucuk">{{ s.stok | sayi }} {{ s.ana_birim }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="bos-durum"><span class="buyuk">▥</span>Bu filtreyle eşleşen kalem yok.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if barkodsuz %}
+  <div class="eylemler">
+    <button type="submit" name="hepsi" value="1" class="dugme"
+            formaction="{{ url_for('barkod.uret') }}"
+            formnovalidate>
+      Barkodu olmayan bütün kalemlere barkod üret
+    </button>
+  </div>
+  {% endif %}
+</form>
+{% endblock %}

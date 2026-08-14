@@ -1,0 +1,62 @@
+{% extends "taban.html" %}
+{% block baslik %}Kategoriler{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Kategoriler</h1>
+    <div class="alt">Ürün grupları — raporlarda ve filtrelerde kullanılır.</div>
+  </div>
+</div>
+
+<div class="izgara k2">
+  <div class="kart">
+    <div class="kart-basi"><h2>{{ 'Kategoriyi Düzenle' if duzenle else 'Yeni Kategori' }}</h2></div>
+    <div class="kart-govde">
+      <form method="post">
+        {% if duzenle %}<input type="hidden" name="id" value="{{ duzenle.id }}">{% endif %}
+        <div class="form-satir">
+          <label for="ad">Kategori adı *</label>
+          <input type="text" id="ad" name="ad" required value="{{ duzenle.ad if duzenle else '' }}">
+        </div>
+        <div class="form-satir">
+          <label for="aciklama">Açıklama</label>
+          <input type="text" id="aciklama" name="aciklama" value="{{ duzenle.aciklama or '' if duzenle }}">
+        </div>
+        <button type="submit" class="dugme ana">Kaydet</button>
+        {% if duzenle %}<a class="dugme" href="{{ url_for('tanimlar.kategoriler') }}">Vazgeç</a>{% endif %}
+      </form>
+    </div>
+  </div>
+
+  <div class="kart">
+    <div class="kart-basi"><h2>Tanımlı Kategoriler</h2></div>
+    <div class="kart-govde sikisik">
+      <table class="liste">
+        <thead><tr><th>Kategori</th><th class="orta">Ürün</th><th></th></tr></thead>
+        <tbody>
+        {% for s in satirlar %}
+          <tr>
+            <td>
+              <strong>{{ s.ad }}</strong>
+              {% if s.aciklama %}<div class="kucuk">{{ s.aciklama }}</div>{% endif %}
+            </td>
+            <td class="orta kucuk">{{ s.urun_sayisi }}</td>
+            <td style="white-space:nowrap">
+              <a class="dugme mini" href="{{ url_for('tanimlar.kategoriler', duzenle=s.id) }}">Düzenle</a>
+              {% if kullanici.rol == 'yonetici' and not s.urun_sayisi %}
+                <form method="post" style="display:inline"
+                      action="{{ url_for('tanimlar.kategori_sil', kid=s.id) }}"
+                      data-onay="'{{ s.ad }}' kategorisi silinsin mi?">
+                  <button class="dugme mini kirmizi" type="submit">Sil</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

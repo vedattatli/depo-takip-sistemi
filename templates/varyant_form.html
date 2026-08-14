@@ -1,0 +1,69 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ 'Varyant Düzenle' if varyant else 'Yeni Varyant' }}{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>{{ 'Varyantı Düzenle' if varyant else 'Yeni Varyant' }}</h1>
+    <div class="alt">{{ urun.ad }} ({{ urun.kod }}) · stok birimi: {{ urun.ana_birim }}</div>
+  </div>
+</div>
+
+<form method="post">
+  <div class="kart" style="max-width:640px">
+    <div class="kart-govde">
+      <div class="form-satir">
+        <label for="renk_dekor">Renk / Dekor</label>
+        <input type="text" id="renk_dekor" name="renk_dekor" autofocus
+               value="{{ varyant.renk_dekor or '' if varyant }}"
+               placeholder="örn. Antrasit Gri, Beyaz Lake, Ceviz H1145">
+        <div class="yardim">Bu alan sektörde en çok karıştırılan bilgi — RAL/dekor kodunu da yazın.</div>
+      </div>
+      <div class="form-satir">
+        <label for="olcu">Ölçü</label>
+        <input type="text" id="olcu" name="olcu"
+               value="{{ varyant.olcu or '' if varyant }}"
+               placeholder="örn. 2100x2800mm, 6.5m boy, 18mm">
+      </div>
+      <div class="form-satir">
+        <label for="sku">Stok kodu (SKU)</label>
+        <input type="text" id="sku" name="sku" value="{{ varyant.sku if varyant else '' }}"
+               placeholder="boş bırakırsanız otomatik üretilir">
+        <div class="yardim">Boş bırakırsanız ürün kodu + renk + ölçüden otomatik oluşturulur.</div>
+      </div>
+      <div class="form-satir">
+        <label for="barkod">Barkod</label>
+        <input type="text" id="barkod" name="barkod" value="{{ varyant.barkod or '' if varyant }}">
+        <div class="yardim">Şimdilik opsiyonel; barkod okuyucu eklendiğinde bu alan kullanılacak.</div>
+      </div>
+
+      <div class="izgara k2">
+        <div class="form-satir">
+          <label for="min_stok">Minimum stok ({{ urun.ana_birim }})</label>
+          <input type="text" id="min_stok" name="min_stok"
+                 value="{{ varyant.min_stok | sayi if varyant else '0' }}">
+          <div class="yardim">Bu seviyenin altına düşünce panelde uyarı çıkar.</div>
+        </div>
+        <div class="form-satir">
+          <label for="birim_fiyat">Birim alış fiyatı (₺)</label>
+          <input type="text" id="birim_fiyat" name="birim_fiyat"
+                 value="{{ varyant.birim_fiyat | sayi if varyant else '0' }}">
+          <div class="yardim">Mal girişinde fiyat girerseniz burası otomatik güncellenir.</div>
+        </div>
+      </div>
+
+      <label class="onay">
+        <input type="checkbox" name="aktif" value="1" {{ 'checked' if not varyant or varyant.aktif }}> Aktif
+      </label>
+    </div>
+  </div>
+
+  <div class="eylemler">
+    <button type="submit" class="dugme ana">Kaydet</button>
+    {% if not varyant %}
+      <button type="submit" name="devam" value="1" class="dugme">Kaydet ve yenisini ekle</button>
+    {% endif %}
+    <a class="dugme" href="{{ url_for('urunler.detay', urun_id=urun.id) }}">Vazgeç</a>
+  </div>
+</form>
+{% endblock %}

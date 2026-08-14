@@ -1,0 +1,67 @@
+{% extends "taban.html" %}
+{% block baslik %}Projeler{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>Projeler / İş Emirleri</h1>
+    <div class="alt">Her müşteri işi bir proje. Malzeme buradan rezerve edilir, maliyeti buradan görülür.</div>
+  </div>
+  <div class="eylemler"><a class="dugme ana" href="{{ url_for('projeler.yeni') }}">+ Yeni proje</a></div>
+</div>
+
+<form class="filtre-cubugu" method="get">
+  <div class="form-satir genis">
+    <label>Ara</label>
+    <input type="search" name="q" value="{{ arama }}" placeholder="proje kodu, müşteri, adres…">
+  </div>
+  <div class="form-satir">
+    <label>Durum</label>
+    <select name="durum" data-otomatik-gonder>
+      <option value="">Açık + Üretimde</option>
+      {% for kod, ad in durumlar %}<option value="{{ kod }}" {{ 'selected' if durum == kod }}>{{ ad }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="dugme ana">Filtrele</button>
+  <a href="{{ url_for('projeler.liste') }}" class="dugme">Temizle</a>
+</form>
+
+<div class="kart">
+  <div class="kart-govde sikisik">
+    {% if projeler %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Kod</th><th>Müşteri</th><th>Tip</th><th>Durum</th>
+              <th class="orta">Rezerve</th><th class="orta">Hareket</th>
+              <th class="sayi">Malzeme Tutarı</th><th>Teslim</th></tr>
+        </thead>
+        <tbody>
+        {% for p in projeler %}
+          <tr>
+            <td><a href="{{ url_for('projeler.detay', proje_id=p.id) }}"><strong>{{ p.kod }}</strong></a></td>
+            <td>{{ p.musteri }}{% if p.adres %}<div class="kucuk">{{ p.adres }}</div>{% endif %}</td>
+            <td class="kucuk">{{ p.tip or '-' }}</td>
+            <td>
+              <span class="rozet {{ {'acik':'gri','uretimde':'mavi','tamamlandi':'yesil','iptal':'kirmizi'}[p.durum] }}">
+                {{ dict(durumlar)[p.durum] }}
+              </span>
+            </td>
+            <td class="orta">{{ p.rezerv_sayisi or '-' }}</td>
+            <td class="orta">{{ p.hareket_sayisi or '-' }}</td>
+            <td class="sayi">{{ p.malzeme_tutari | para }}</td>
+            <td class="kucuk">{{ p.teslim | kisa_tarih if p.teslim else '-' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum">
+        <span class="buyuk">◈</span>Proje bulunamadı.
+        <div style="margin-top:10px"><a class="dugme ana" href="{{ url_for('projeler.yeni') }}">+ Yeni proje</a></div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

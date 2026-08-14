@@ -1,0 +1,180 @@
+{% extends "taban.html" %}
+{% block baslik %}{{ proje.kod }} — {{ proje.musteri }}{% endblock %}
+
+{% block icerik %}
+<div class="sayfa-basi">
+  <div>
+    <h1>{{ proje.kod }} — {{ proje.musteri }}</h1>
+    <div class="alt">
+      {{ dict(durumlar)[proje.durum] }}
+      {% if proje.tip %} · {{ proje.tip }}{% endif %}
+      {% if proje.teslim %} · teslim {{ proje.teslim | kisa_tarih }}{% endif %}
+      {% if proje.telefon %} · {{ proje.telefon }}{% endif %}
+    </div>
+  </div>
+  <div class="eylemler">
+    <form method="post" action="{{ url_for('projeler.durum_degistir', proje_id=proje.id) }}">
+      <select name="durum" onchange="this.form.submit()">
+        {% for kod, ad in durumlar %}
+          <option value="{{ kod }}" {{ 'selected' if proje.durum == kod }}>{{ ad }}</option>
+        {% endfor %}
+      </select>
+    </form>
+    <a class="dugme" href="{{ url_for('projeler.duzenle', proje_id=proje.id) }}">Düzenle</a>
+  </div>
+</div>
+
+<div class="izgara k3" style="margin-bottom:16px">
+  <div class="sayac">
+    <div class="etiket">Kullanılan Malzeme</div>
+    <div class="deger">{{ tuketim_tutari | para }}</div>
+    <div class="not">depodan fiilen çıkan</div>
+  </div>
+  <div class="sayac">
+    <div class="etiket">Rezerve Malzeme</div>
+    <div class="deger" style="color:var(--turuncu)">{{ rezerve_tutari | para }}</div>
+    <div class="not">ayrılmış, henüz çıkmadı</div>
+  </div>
+  <div class="sayac">
+    <div class="etiket">Toplam Malzeme</div>
+    <div class="deger">{{ (tuketim_tutari + rezerve_tutari) | para }}</div>
+    <div class="not">{{ proje.baslangic | kisa_tarih if proje.baslangic else '' }}</div>
+  </div>
+</div>
+
+{% if proje.adres or proje.notlar %}
+<div class="kart">
+  <div class="kart-govde">
+    <dl class="bilgi-liste">
+      {% if proje.adres %}<dt>Adres</dt><dd>{{ proje.adres }}</dd>{% endif %}
+      {% if proje.notlar %}<dt>Notlar</dt><dd>{{ proje.notlar }}</dd>{% endif %}
+    </dl>
+  </div>
+</div>
+{% endif %}
+
+{% if rol_yeterli(kullanici.rol, 'depo') and proje.durum in ('acik', 'uretimde') %}
+<div class="kart">
+  <div class="kart-basi">
+    <h2>Malzeme Rezerve Et</h2>
+    <span class="kucuk">rezerve edilen mal depoda kalır ama başka işe verilemez</span>
+  </div>
+  <div class="kart-govde">
+    <form method="post" action="{{ url_for('projeler.rezerve_et', proje_id=proje.id) }}">
+      <table class="satir-tablo" id="satirlar">
+        <tbody>
+          <tr>
+            <td class="urun-hucre" style="width:45%">
+              <input type="hidden" name="varyant_id" class="varyant-id">
+              <input type="text" class="urun-arama" autocomplete="off" placeholder="ürün ara…">
+              <div class="oneri-kutu"></div>
+              <div class="secim-bilgi kucuk"></div>
+            </td>
+            <td style="width:130px">
+              <select name="depo_id" data-depo-kaynak>
+                {% for d in depolar %}<option value="{{ d.id }}">{{ d.ad }}</option>{% endfor %}
+              </select>
+            </td>
+            <td style="width:110px">
+              <input type="text" name="miktar" class="miktar-alan" inputmode="decimal" placeholder="miktar">
+            </td>
+            <td><input type="text" name="aciklama" placeholder="açıklama (opsiyonel)"></td>
+            <td style="width:100px"><button type="submit" class="dugme ana mini">Rezerve et</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<div class="kart">
+  <div class="kart-basi"><h2>Rezervasyonlar</h2></div>
+  <div class="kart-govde sikisik">
+    {% if rezervasyonlar %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead>
+          <tr><th>Ürün</th><th>Depo</th><th class="sayi">Miktar</th><th class="sayi">Depo Stoğu</th>
+              <th>Durum</th><th>Tarih</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for r in rezervasyonlar %}
+          <tr style="{{ 'opacity:.55' if r.durum != 'aktif' }}">
+            <td>
+              <a href="{{ url_for('stok.detay', varyant_id=r.varyant_id) }}">{{ r.urun_ad }}</a>
+              <div class="kucuk">{{ r.sku }}{% if r.renk_dekor %} · {{ r.renk_dekor }}{% endif %}</div>
+            </td>
+            <td class="kucuk">{{ r.depo_ad }}</td>
+            <td class="sayi"><strong>{{ r.miktar | sayi }}</strong> <span class="kucuk">{{ r.ana_birim }}</span></td>
+            <td class="sayi kucuk">{{ r.depo_stok | sayi }}</td>
+            <td>
+              <span class="rozet {{ {'aktif':'turuncu','kullanildi':'yesil','iptal':'gri'}[r.durum] }}">
+                {{ {'aktif':'Bekliyor','kullanildi':'Çıkış yapıldı','iptal':'İptal'}[r.durum] }}
+              </span>
+            </td>
+            <td class="kucuk">{{ r.tarih | kisa_tarih }}</td>
+            <td style="white-space:nowrap;width:1%">
+              {% if r.durum == 'aktif' and rol_yeterli(kullanici.rol, 'depo') %}
+              <div style="display:flex;gap:5px;align-items:center;justify-content:flex-end">
+                <form method="post" style="display:flex;gap:4px;align-items:center"
+                      action="{{ url_for('projeler.rezerve_cikis', rez_id=r.id) }}">
+                  <input type="hidden" name="tip" value="sarf">
+                  <input type="text" name="miktar" inputmode="decimal"
+                         placeholder="{{ r.miktar | sayi }}"
+                         title="Boş bırakırsanız tamamı çıkar, sayı yazarsanız o kadarı"
+                         style="width:66px;min-width:0;flex:none;padding:4px 7px;font-size:12.5px">
+                  <button class="dugme mini yesil" type="submit">Çıkış yap</button>
+                </form>
+                <form method="post" action="{{ url_for('projeler.rezerve_iptal', rez_id=r.id) }}"
+                      data-onay="Rezervasyon iptal edilsin mi?">
+                  <button class="dugme mini kirmizi" type="submit">İptal</button>
+                </form>
+              </div>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">◇</span>Bu projeye henüz malzeme rezerve edilmemiş.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="kart">
+  <div class="kart-basi"><h2>Bu Projeye Ait Hareketler</h2></div>
+  <div class="kart-govde sikisik">
+    {% if hareketler %}
+    <div class="tablo-sar">
+      <table class="liste">
+        <thead><tr><th>Tarih</th><th>İşlem</th><th>Ürün</th><th>Depo</th>
+                   <th class="sayi">Miktar</th><th class="sayi">Tutar</th><th>Kullanıcı</th></tr></thead>
+        <tbody>
+        {% for h in hareketler %}
+          {% set b = sabitler.HAREKET_TIPLERI[h.tip] %}
+          <tr>
+            <td class="kucuk">{{ h.tarih | kisa_tarih }}</td>
+            <td><span class="rozet {{ b.renk }}">{{ b.ad }}</span></td>
+            <td><a href="{{ url_for('stok.detay', varyant_id=h.varyant_id) }}">{{ h.urun_ad }}</a></td>
+            <td class="kucuk">{{ h.depo_ad }}</td>
+            <td class="sayi">
+              <strong style="color:{{ 'var(--yesil)' if h.miktar > 0 else 'var(--kirmizi)' }}">
+                {{ '+' if h.miktar > 0 }}{{ h.miktar | sayi }}
+              </strong> <span class="kucuk">{{ h.ana_birim }}</span>
+            </td>
+            <td class="sayi kucuk">{{ (h.miktar | abs * (h.efektif_fiyat or 0)) | para }}</td>
+            <td class="kucuk">{{ h.kullanici_ad or '-' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <div class="bos-durum"><span class="buyuk">≡</span>Bu proje için henüz malzeme çıkışı yapılmamış.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
