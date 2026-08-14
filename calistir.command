@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Redecor Depo - cift tiklayarak calistirma dosyasi
+# Depo Takip - cift tiklayarak calistirma dosyasi
 cd "$(dirname "$0")" || exit 1
 
 if [ ! -d ".venv" ]; then
@@ -16,7 +16,7 @@ fi
 
 echo ""
 echo "================================================"
-echo "  REDECOR DEPO calisiyor"
+echo "  DEPO TAKIP calisiyor"
 echo "  Tarayicida acin:  http://127.0.0.1:5051"
 echo "  Durdurmak icin bu pencerede Ctrl+C yapin"
 echo "================================================"

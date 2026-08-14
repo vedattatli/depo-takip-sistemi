@@ -255,7 +255,7 @@ def yedek():
         kaynak.close()
     tampon.seek(0)
 
-    dosya_adi = f"redecor-depo-yedek-{db.bugun()}.db"
+    dosya_adi = f"depo-yedek-{db.bugun()}.db"
     db.log_yaz(g.kullanici, "yedek_al", dosya_adi)
     return send_file(tampon, mimetype="application/x-sqlite3",
                      as_attachment=True, download_name=dosya_adi)

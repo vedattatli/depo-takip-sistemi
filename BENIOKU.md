@@ -1,4 +1,4 @@
-# Redecor Depo Takip Sistemi
+# Depo Takip Sistemi
 
 Mutfak, kapı ve pencere üretimi yapan bir firmanın deposunu takip etmek için
 yazılmış, tarayıcıdan çalışan bir uygulama. Tek bilgisayarda çalışır, internet

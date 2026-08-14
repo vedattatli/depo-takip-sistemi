@@ -1,4 +1,4 @@
--- Redecor Depo Takip Sistemi - veritabani semasi
+-- Depo Takip Sistemi - veritabani semasi
 PRAGMA foreign_keys = ON;
 
 -- ---------------------------------------------------------------- kullanicilar

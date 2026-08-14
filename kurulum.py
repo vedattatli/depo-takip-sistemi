@@ -275,7 +275,7 @@ def sifre_sifirla(kullanici_adi):
 
 
 def main():
-    ayristirici = argparse.ArgumentParser(description="Redecor Depo kurulumu")
+    ayristirici = argparse.ArgumentParser(description="Depo Takip kurulumu")
     ayristirici.add_argument("--ornek-veri", action="store_true",
                              help="deneme amaçlı ürün ve hareket verisi ekler")
     ayristirici.add_argument("--sifirla", action="store_true",
@@ -299,7 +299,7 @@ def main():
 
     uygulama = uygulama_olustur()
     with uygulama.app_context():
-        print("Redecor Depo kurulumu")
+        print("Depo Takip kurulumu")
         print("-" * 46)
         eklenen = temel_tanimlar()
         print(f"  ✓ {eklenen['kategori']} kategori, {eklenen['depo']} depo hazır.")

@@ -1,4 +1,4 @@
-"""Redecor Depo Takip Sistemi - uygulama giris noktasi."""
+"""Depo Takip Sistemi - uygulama giris noktasi."""
 
 import os
 import secrets

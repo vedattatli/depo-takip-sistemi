@@ -1,6 +1,6 @@
 """Uygulama genelinde kullanilan sabitler: roller, hareket tipleri, birimler."""
 
-UYGULAMA_ADI = "Redecor Depo"
+UYGULAMA_ADI = "Depo Takip"
 
 # --------------------------------------------------------------------- roller
 # Sirali: yukaridakiler asagidakilerin tum yetkilerini kapsar.

@@ -44,13 +44,13 @@ Aynı sebeple **yanlış kayıt silinmez**, ters kayıtla iptal edilir (storno).
 | Arayüz | HTML/CSS + sade JavaScript (çatı kullanılmadı) |
 | Parola | pbkdf2:sha256 |
 
-Tek harici bağımlılık Flask'tir. İnternet bağlantısı gerektirmez.
+İki harici bağımlılık vardır: Flask ve python-barcode (Code 128 üretimi). İnternet bağlantısı gerektirmez.
 
 ## Kurulum
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install flask
+.venv/bin/pip install -r requirements.txt
 .venv/bin/python kurulum.py     # veritabanını demo veriyle kurar
 .venv/bin/python app.py
 ```
@@ -59,7 +59,7 @@ Tarayıcıdan `http://127.0.0.1:5051` adresine gidin.
 
 > Port 5051 kullanılıyor çünkü 5000 macOS'ta AirPlay tarafından kullanılıyor. `PORT` ortam değişkeniyle değiştirilebilir.
 
-**Demo giriş:** kullanıcı `vedat`, parola `admin123`
+**Demo giriş:** kullanıcı `admin`, parola `admin123`
 Bu bilgiler yalnızca `kurulum.py` ile üretilen demo verisi içindir. Gerçek kullanımda ilk iş parolayı değiştirmektir.
 
 ## Test

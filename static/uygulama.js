@@ -1,4 +1,4 @@
-/* Redecor Depo - hareket satirlari ve urun arama */
+/* Depo Takip - hareket satirlari ve urun arama */
 
 (function () {
   "use strict";
